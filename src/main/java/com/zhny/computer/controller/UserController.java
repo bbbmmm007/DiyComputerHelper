@@ -5,6 +5,7 @@ import com.zhny.computer.entity.User;
 import com.zhny.computer.service.UserService;
 import com.zhny.computer.service.util.JsonResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
-
+import java.util.concurrent.TimeUnit;
 
 
 @RestController
@@ -20,6 +21,8 @@ import java.util.List;
 public class UserController extends BaseController {
     @Autowired
     private UserService userService;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     //注册的映射
     @RequestMapping("reg")
@@ -28,20 +31,47 @@ public class UserController extends BaseController {
         return new JsonResult<Void>(SUCCESS);
     }
 
-    //登录的映射
+    // 登录的映射
     @RequestMapping("login")
     public JsonResult<User> login(String username, String password, HttpSession session) {
         User data = userService.login(username, password);
-        //向session对象中完成数据的绑定
+        // 在 session 中绑定用户数据
         session.setAttribute("uid", data.getUid());
         session.setAttribute("username", data.getUsername());
 
-        //获取session绑定中的数据
+        // 将用户信息存入 Redis，提升性能
+        redisTemplate.opsForValue().set("login:session:" + data.getUid(), data, 30, TimeUnit.MINUTES);
+
+        // 获取 session 绑定中的数据
         System.out.println(getUidFromSession(session));
         System.out.println(getUsernameFromSession(session));
-        return new JsonResult<User>(SUCCESS, data);
+
+        return new JsonResult<>(SUCCESS, data);
     }
 
+    // 退出登录的映射
+    @RequestMapping("logout")
+    public JsonResult<Void> logout(HttpSession session) {
+        // 获取用户的 uid
+        System.out.println(getUidFromSession(session));
+        System.out.println(getUsernameFromSession(session));
+        Integer uid = getUidFromSession(session);
+        String username = getUsernameFromSession(session);
+        // 清除 session 中的用户信息
+        session.removeAttribute("uid");
+        session.removeAttribute("username");
+        // 如果 uid 不为 null，清除 Redis 中的数据
+        if (uid != null) {
+            redisTemplate.delete("login:session:" + uid);
+        }
+
+        if (username != null) {
+            redisTemplate.delete("login:session:" + username);
+        }
+        System.out.println(getUidFromSession(session));
+        System.out.println(getUsernameFromSession(session));
+        return new JsonResult<>(SUCCESS);
+    }
     //更改密码的映射
     @RequestMapping("change_password")
     public JsonResult<Void> changePassword(String oldPassword,

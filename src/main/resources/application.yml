@@ -6,10 +6,14 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 
-  redis:
-    host: localhost
-    port: 6379
+  session:
+    store-type: redis  # 指定Spring Session的存储类型为Redis
+    redis:
+      flush-mode: on-save  # 设置Redis会话的刷新模式为"on-save"，即在每次会话修改后保存
 
+  redis:
+    host: localhost  # Redis服务器的主机名或IP地址，这里是本地
+    port: 6379       # Redis服务器的端口，默认为6379
 
 
 

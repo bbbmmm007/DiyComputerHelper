@@ -7,30 +7,62 @@ import com.zhny.computer.vo.UserDistributionVO;
 import com.zhny.computer.service.AdminService;
 import com.zhny.computer.service.util.JsonResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpSession;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("admin")
 public class AdminController extends BaseController {
     @Autowired
     private AdminService adminService;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
-    //管理员登录的接口
+    // 登录的映射
     @RequestMapping("login")
     public JsonResult<Admin> login(String adminName, String password, HttpSession session) {
         Admin data = adminService.login(adminName, password);
-        //向session对象中完成数据的绑定
+        // 在 session 中绑定用户数据
         session.setAttribute("amid",data.getAmid());
         session.setAttribute("adminName",data.getAdminName());
-        System.out.println(getAmidFromSession(session));
-        System.out.println(getAdminNameFromSession(session));
 
-        return new JsonResult<Admin>(SUCCESS,data);
+        // 将用户信息存入 Redis，提升性能
+        redisTemplate.opsForValue().set("login:session:" + data.getAmid(), data, 30, TimeUnit.MINUTES);
+
+        // 获取 session 绑定中的数据
+        System.out.println(getUidFromSession(session));
+        System.out.println(getUsernameFromSession(session));
+
+        return new JsonResult<Admin>(SUCCESS, data);
     }
+
+    // 退出登录的映射
+    @RequestMapping("logout")
+    public JsonResult<Void> logout(HttpSession session) {
+
+        Integer amid = getAmidFromSession(session);
+        String adminName = getAdminNameFromSession(session);
+
+        // 清除 session 中的用户信息
+        session.removeAttribute("amid");
+        session.removeAttribute("adminName");
+        // 如果 amid 不为 null，清除 Redis 中的登录信息
+        if (amid != null) {
+            redisTemplate.delete("login:session:" + amid);
+        }
+
+        if (adminName != null) {
+            redisTemplate.delete("login:session:" + adminName);
+        }
+        // 返回成功状态
+        return new JsonResult<>(SUCCESS);
+    }
+
     //管理员注册的接口
     @RequestMapping("register")
     public JsonResult<Void> register(Admin admin) {

@@ -24,6 +24,7 @@ public class ProfileServiceImpl implements PrifileService {
     @Autowired
     private ObjectMapper objectMapper;
 
+
     @Override
     public void saveUConfig(ConfigRequestVO configRequestVO,Integer uid,String username) {
         try {

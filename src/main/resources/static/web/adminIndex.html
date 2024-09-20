@@ -137,7 +137,7 @@
                 <div class="panel-body">
                     <i class="fa fa-users"></i>
                     <ul>
-                        <li><a href="adminUserFenye.html">管理用户页面</a></li>
+                        <li><a href="adminUser.html">管理用户页面</a></li>
                     </ul>
                 </div>
             </div>
@@ -177,7 +177,8 @@
                     <ul>
                         <li><a href="adminPassword.html">更改密码</a></li>
                         <li><button id="deleteAdminBtn" class="btn btn-danger">注销账户</button></li>
-                        <li><a href="adminLogin.html">退出登录</a></li>
+                        <!-- 退出登录按钮 -->
+                        <li><button id="logoutBtn" class="btn btn-warning">退出登录</button></li>
                     </ul>
                 </div>
             </div>
@@ -191,6 +192,7 @@
 <!-- JavaScript 逻辑 -->
 <script>
     $(document).ready(function () {
+        // 注销账户按钮逻辑
         $("#deleteAdminBtn").click(function () {
             if (confirm("您确认要注销您的管理员账户吗？此操作无法恢复！")) {
                 $.ajax({
@@ -210,8 +212,28 @@
                 });
             }
         });
+
+        // 退出登录按钮逻辑
+        $("#logoutBtn").click(function () {
+            $.ajax({
+                url: "/admin/logout", // 调用后端的退出登录接口
+                type: "POST",
+                success: function (json) {
+                    if (json.state === 200) {
+                        alert("退出登录成功");
+                        window.location.href = "adminLogin.html"; // 成功退出后重定向到登录页面
+                    } else {
+                        alert("退出登录失败：" + json.message);
+                    }
+                },
+                error: function () {
+                    alert("退出登录时发生服务器错误。");
+                }
+            });
+        });
     });
 </script>
+
 <footer class="footer">
     <div class="text-center rights container">
         <p>作者声明数据只供娱乐</p>

@@ -26,10 +26,6 @@ public class ProductServiceImpl implements ProductService {
 
         return product;
     }
-
-
-
-
     //统计所有商品总数
     @Override
     public Integer countShowProduct() {
@@ -71,16 +67,11 @@ public class ProductServiceImpl implements ProductService {
         return productMapper.countSchByChId(itemType, childId);
     }
 
-
-
-
-
     //展示所有商品
     @Override
     public List<Product> showProductFen(Integer pageNumber, Integer pageSize) {
         Integer offset = (pageNumber - 1) * pageSize;//pageNumber表示你想查询第几页  pageSize每页查询多少条数据
         return productMapper.showProductFen(1,pageSize,offset);
-
     }
     //搜索商品
     @Override

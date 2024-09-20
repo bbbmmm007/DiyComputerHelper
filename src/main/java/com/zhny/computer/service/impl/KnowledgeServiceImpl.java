@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -84,15 +85,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
 
     }
-    //展示各个板块的词条
-    @Override
-    public List<Knowledge> showKnowledge(Integer ancestorId) {
-        List<Knowledge> list = knowledgeMapper.showKnowledge(ancestorId);
 
-        return list;
-
-
-    }
 
     @Override
     public Knowledge showKnowledgeDetail(Integer knid) {
@@ -103,6 +96,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     public List<Knowledge> showAllKnowledge() {
         return knowledgeMapper.showAllKnowledge();
     }
+
 
     @Override
     public List<Knowledge> showKnowledgeF(Integer ancestorId, Integer pageSize, Integer pageNumber) {

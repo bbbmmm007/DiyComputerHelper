@@ -39,24 +39,18 @@ public class KnowledgeController extends BaseController{
         knowledgeService.updateKnowledge(knowledge,amid,adminName,knid);
         return new JsonResult<>(SUCCESS);
     }
-//    //展示各个板块词条
-//    @RequestMapping("show_knowledge")
-//    public JsonResult<List<Knowledge>> showKnowledge(Integer ancestorId){
-//        List<Knowledge> knowledgeList = knowledgeService.showKnowledge(ancestorId);
-//        return new JsonResult<>(SUCCESS,knowledgeList);
-//    }
     //展示词条的详细信息
     @RequestMapping("show_detail_knowledge")
     public JsonResult<Knowledge> showDetailKnowledge(Integer knid){
         Knowledge knowledge = knowledgeService.showKnowledgeDetail(knid);
         return new JsonResult<>(SUCCESS,knowledge);
     }
-//    //展示所有词条
-//    @RequestMapping("show_all_knowledge")
-//    public JsonResult<List<Knowledge>> showAllKnowledge(){
-//        List<Knowledge> knowledgeList = knowledgeService.showAllKnowledge();
-//        return new JsonResult<>(SUCCESS,knowledgeList);
-//    }
+    //展示所有词条
+    @RequestMapping("show_all_knowledge")
+    public JsonResult<List<Knowledge>> showAllKnowledge(){
+        List<Knowledge> knowledgeList = knowledgeService.showAllKnowledge();
+        return new JsonResult<>(SUCCESS,knowledgeList);
+    }
 
     //分页展示各个板块词条
     @RequestMapping("/show_knowledgeF/{ancestorId}/{pageNumber}/{pageSize}")

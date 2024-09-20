@@ -63,23 +63,26 @@ public class BaseController {
     }
 
 
-    //session获取到绑定的数据
+    // 从 session 获取 uid，增加空值处理
     protected final Integer getUidFromSession(HttpSession session) {
-        return Integer.valueOf(session.getAttribute("uid").toString());
-
+        Object uid = session.getAttribute("uid");
+        return (uid != null) ? Integer.valueOf(uid.toString()) : null; // 返回 null 如果 uid 不存在
     }
-
+    // 从 session 获取 username，增加空值处理
     protected final String getUsernameFromSession(HttpSession session) {
-
-        return session.getAttribute("username").toString();
+        Object username = session.getAttribute("username");
+        return (username != null) ? username.toString() : null; // 返回 null 如果 username 不存在
     }
+
 
     protected final Integer getAmidFromSession(HttpSession session) {
-        return Integer.valueOf(session.getAttribute("amid").toString());
+        Object amid = session.getAttribute("amid");
+        return (amid != null) ? Integer.valueOf(amid.toString()) : null;
 
     }
     protected final String getAdminNameFromSession(HttpSession session) {
 
-        return session.getAttribute("adminName").toString();
+        Object adminName = session.getAttribute("adminName");
+        return (adminName != null) ? adminName.toString() : null;
     }
 }

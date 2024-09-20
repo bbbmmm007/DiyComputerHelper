@@ -9,7 +9,6 @@ public interface KnowledgeService {
     void deleteKnowledge(Integer amid,Integer knid);
     void updateKnowledge(Knowledge knowledge,Integer amid,String adminName,Integer knid);
     Knowledge showKnowledgeDetail(Integer knid);
-    List<Knowledge> showKnowledge(Integer ancestorId);
     List<Knowledge> showAllKnowledge();
     List<Knowledge> showKnowledgeF(Integer ancestorId,Integer pageSize,Integer pageNumber);
     List<Knowledge> showAllKnowledgeF(Integer pageSize,Integer pageNumber);

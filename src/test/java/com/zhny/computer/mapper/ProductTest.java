@@ -15,7 +15,7 @@ public class ProductTest {
     @Test
     public void insert() {
 
-        System.out.println(productMapper.selectPriceMin());
+
     }
 
 

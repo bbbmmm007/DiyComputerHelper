@@ -166,10 +166,26 @@
         });
 
         // 退出登录按钮点击事件
+
         $('#logoutBtn').click(function () {
-            // 这里可以添加清除会话或 token 的逻辑
-            window.location.href = "login.html"; // 跳转到登录页面
+            $.ajax({
+                url: "/users/logout", // 你的退出登录接口
+                type: "POST",
+                dataType: "JSON",
+                success: function (json) {
+                    if (json.state === 200) { // 假设 200 表示成功
+                        alert("退出登录成功");
+                        location.href = "login.html"; // 跳转到登录页面
+                    } else {
+                        alert("退出登录失败：" + (json.message || "未知错误"));
+                    }
+                },
+                error: function (xhr) {
+                    alert("退出登录时产生未知的异常! " + xhr.status + " " + xhr.statusText);
+                }
+            });
         });
+
 
 
     });

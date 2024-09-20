@@ -51,7 +51,6 @@
     <div class="text-center search-bar">
         <input type="text" id="searchInput" class="form-control" placeholder="搜索商品..." style="display: inline-block; width: auto;">
         <button id="searchBtn" class="btn btn-primary">搜索</button>
-
     </div>
 
     <!-- 分类选择器 -->
@@ -113,6 +112,17 @@
         initialize(); // 初始化
 
         function initialize() {
+            // 从 localStorage 获取搜索关键字
+            restoreState(); // 恢复状态
+            populateCategorySelect1(); // 填充第一级分类
+            setupEventListeners(); // 设置事件监听
+            clearProductsAndPagination(); // 清空商品列表和分页控件
+            var savedSearch = localStorage.getItem('searchKeyword');
+            if (savedSearch) {
+                $('#searchInput').val(savedSearch); // 填充搜索框
+                currentItemType = savedSearch; // 设置当前搜索关键字
+                loadProducts(currentItemType, currentPage); // 加载商品
+            }
             populateCategorySelect1(); // 填充第一级分类
             setupEventListeners(); // 设置事件监听
             clearProductsAndPagination(); // 清空商品列表和分页控件
@@ -122,7 +132,7 @@
             $('#categorySelect1').change(function () {
                 var ancestorId = $(this).val();
                 updateCategorySelect2(ancestorId);
-                updateCategoryCount(currentItemType,ancestorId); // 更新分类下的商品数量
+                updateCategoryCount(currentItemType, ancestorId); // 更新分类下的商品数量
                 loadProducts(currentItemType, currentPage, ancestorId); // 加载商品
             });
 
@@ -130,7 +140,7 @@
                 var ancestorId = $('#categorySelect1').val();
                 var parentId = $(this).val();
                 updateCategorySelect3(ancestorId, parentId);
-                updateCategoryCount(currentItemType,ancestorId, parentId); // 更新分类下的商品数量
+                updateCategoryCount(currentItemType, ancestorId, parentId); // 更新分类下的商品数量
                 loadProducts(currentItemType, currentPage, ancestorId, parentId); // 加载商品
             });
 
@@ -138,7 +148,7 @@
                 var ancestorId = $('#categorySelect1').val();
                 var parentId = $('#categorySelect2').val();
                 var childId = $(this).val();
-                updateCategoryCount(currentItemType,ancestorId, parentId, childId); // 更新分类下的商品数量
+                updateCategoryCount(currentItemType, ancestorId, parentId, childId); // 更新分类下的商品数量
                 loadProducts(currentItemType, currentPage, ancestorId, parentId, childId); // 加载商品
             });
 
@@ -147,6 +157,7 @@
                 currentItemType = $('#searchInput').val().trim(); // 获取搜索框中的关键字
                 if (currentItemType) {
                     currentPage = 1; // 搜索时从第一页开始
+                    saveState(); // 保存状态
                     loadProducts(currentItemType, currentPage); // 根据关键字加载商品
                 } else {
                     clearProductsAndPagination(); // 如果搜索框为空，清空商品列表和分页
@@ -162,20 +173,27 @@
                 window.location.href = "profileCarts.html";
             });
 
+            $('#categorySelect1, #categorySelect2, #categorySelect3').change(function () {
+                saveState(); // 每次分类切换时保存状态
+                loadProducts(currentItemType, currentPage, $('#categorySelect1').val(), $('#categorySelect2').val(), $('#categorySelect3').val());
+            });
+
             $(document).on('click', '.pagination a', function (event) {
                 event.preventDefault();
                 var page = $(this).data('page');
                 if (page >= 1 && page <= totalPages) {
                     currentPage = page;
+                    saveState(); // 保存状态
                     loadProducts(currentItemType, currentPage, $('#categorySelect1').val(), $('#categorySelect2').val(), $('#categorySelect3').val());
                 }
             });
         }
+
         // 状态管理
         var collectionIds = new Set(); // 存储已加入收藏的商品 ID
         var cartIds = new Set(); // 存储已加入购物车的商品 ID
 
-// 加入收藏函数
+        // 加入收藏函数
         window.addToCollection = function (productId) {
             $.ajax({
                 url: '/collections/add_collection',
@@ -196,7 +214,7 @@
             });
         };
 
-// 加入购物车函数
+        // 加入购物车函数
         window.addToCart = function (productId) {
             $.ajax({
                 url: '/carts/add_carts',
@@ -217,7 +235,7 @@
             });
         };
 
-// 更新商品行的按钮文本
+        // 更新商品行的按钮文本
         function updateProductRow(productId) {
             var $productRow = $('#product-' + productId); // 确保选择器正确
             if ($productRow.length > 0) {
@@ -235,8 +253,38 @@
                 }
             }
         }
+        function restoreState() {
+            // 从 localStorage 恢复搜索关键字、页码、分类
+            var savedSearch = localStorage.getItem('searchKeyword');
+            var savedPage = localStorage.getItem('currentPage');
+            var selectedAncestorId = localStorage.getItem('selectedAncestorId');
+            var selectedParentId = localStorage.getItem('selectedParentId');
+            var selectedChildId = localStorage.getItem('selectedChildId');
 
+            // 如果存在保存的状态，进行恢复
+            if (savedSearch) {
+                currentItemType = savedSearch;
+                $('#searchInput').val(savedSearch); // 恢复搜索框
+            }
 
+            if (savedPage) {
+                currentPage = parseInt(savedPage); // 恢复页码
+            }
+
+            if (selectedAncestorId) {
+                $('#categorySelect1').val(selectedAncestorId).trigger('change'); // 恢复第一级分类
+            }
+
+            if (selectedParentId) {
+                $('#categorySelect2').val(selectedParentId).trigger('change'); // 恢复第二级分类
+            }
+
+            if (selectedChildId) {
+                $('#categorySelect3').val(selectedChildId).trigger('change'); // 恢复第三级分类
+            }
+
+            loadProducts(currentItemType, currentPage, selectedAncestorId, selectedParentId, selectedChildId); // 根据恢复的状态加载商品
+        }
         function loadProducts(itemType, pageNumber, ancestorId = '', parentId = '', childId = '') {
             var url = '/products/rearch_productSF/' + itemType + '/' + pageNumber + '/' + pageSize;
 
@@ -293,8 +341,6 @@
             });
         }
 
-
-
         // 清空商品列表和分页控件
         function clearProductsAndPagination() {
             $('#productList').empty(); // 清空商品列表
@@ -329,7 +375,6 @@
                 }
             });
         }
-
 
         // 设置分页
         function setupPagination(itemType, ancestorId = '', parentId = '', childId = '') {
@@ -393,6 +438,16 @@
                 }
             });
         }
+
+        function saveState() {
+            // 保存当前搜索关键字、页码、分类到 localStorage
+            localStorage.setItem('searchKeyword', currentItemType);
+            localStorage.setItem('currentPage', currentPage);
+            localStorage.setItem('selectedAncestorId', $('#categorySelect1').val());
+            localStorage.setItem('selectedParentId', $('#categorySelect2').val());
+            localStorage.setItem('selectedChildId', $('#categorySelect3').val());
+        }
+
     });
 </script>
 <footer class="footer">
