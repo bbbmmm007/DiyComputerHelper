@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit" />
+    <title>编辑词条 - DIY小助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="../css/layout.css" />
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <script src="../bootstrap3/js/bootstrap.js"></script>
+    <style>
+        .container {
+            margin-top: 50px;
+            max-width: 600px;
+        }
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手管理员页面--编辑知识条</b>
+        <!-- 按钮组 -->
+        <button type="button" class="btn btn-info" id="backBtn">返回</button>
+        <button type="button" class="btn btn-info" id="homeBtn">回到主页</button>
+    </span>
+</header>>
+<div class="container">
+    <h2 class="text-center">编辑词条</h2>
+    <form id="updateKnowledgeForm">
+        <div class="form-group">
+            <label for="topic">词条主题</label>
+            <input type="text" class="form-control" id="topic" placeholder="请输入词条主题" required>
+        </div>
+        <div class="form-group">
+            <label for="content">词条内容</label>
+            <textarea class="form-control" id="content" placeholder="请输入词条内容" rows="6" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">更新词条</button>
+    </form>
+</div>
+<script src="../js/AdminButton.js"></script>
+<script>
+    $(document).ready(function () {
+        var knid = getQueryParameter("knid"); // 假设在 URL 中有 ?knid=xxx 参数
+        if (!knid) {
+            alert("无效的词条ID！");
+            return;
+        }
+
+        // 获取词条详细信息并填充表单
+        $.ajax({
+            url: '/knowledges/show_detail_knowledge',  // 获取词条详情的接口
+            type: 'GET',
+            data: { knid: knid },
+            success: function (response) {
+                if (response.state === 200) {
+                    var knowledge = response.data;
+                    $('#topic').val(knowledge.topic);  // 填充原有的主题
+                    $('#content').val(knowledge.content);  // 填充原有的内容
+                } else {
+                    alert('获取词条信息失败：' + response.message);
+                }
+            },
+            error: function () {
+                alert('无法加载词条信息，服务器错误。');
+            }
+        });
+
+        // 提交更新表单
+        $('#updateKnowledgeForm').on('submit', function (e) {
+            e.preventDefault();
+            var topic = $('#topic').val();
+            var content = $('#content').val();
+
+            if (!topic || !content) {
+                alert("请填写所有必填项！");
+                return;
+            }
+
+            // 调用更新接口
+            $.ajax({
+                url: '/knowledges/update_knowledge',  // 更新词条的接口
+                type: 'POST',
+                data: {
+                    knid: knid,
+                    topic: topic,
+                    content: content
+                },
+                success: function (json) {
+                    if (json.state === 200) {
+                        alert('词条更新成功');
+
+                    } else {
+                        alert('词条更新失败: ' + json.message);
+                    }
+                },
+                error: function () {
+                    alert('词条更新失败，服务器错误。');
+                }
+            });
+        });
+
+        // 获取 URL 参数
+        function getQueryParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+    });
+</script>
+
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+
+</html>

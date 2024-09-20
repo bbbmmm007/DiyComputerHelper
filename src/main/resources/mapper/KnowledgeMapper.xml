@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--namespace用于指定当前的映射文件和哪个接口进行映射,需要指定接口的文件路径,路径需要是包的完整路径结构-->
+<mapper namespace="com.zhny.computer.mapper.KnowledgeMapper">
+    <resultMap id="KnowedgeMap" type="com.zhny.computer.entity.Knowledge">
+
+        <result column="knid" property="knid"/>
+        <result column="ancestor_id" property="ancestorId"/>
+        <result column="ancestor_name" property="ancestorName"/>
+        <result column="created_user" property="createdUser"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="modified_user" property="modifiedUser"/>
+        <result column="modified_time" property="modifiedTime"/>
+    </resultMap>
+
+    <!--根据祖类id查询到所属板块-->
+    <select id="showAnName" resultType="string">
+        select ancestor_name from t_knowledge where ancestor_id=#{ancestorId}
+    </select>
+
+    <!--插入新的知识条-->
+    <insert id="addKnowledge" useGeneratedKeys="true" keyProperty="knid">
+        INSERT INTO t_knowledge(topic,content,ancestor_id,ancestor_name,created_user,created_time,modified_user,modified_time)
+        VALUES (#{topic},#{content},#{ancestorId},#{ancestorName},#{createdUser},#{createdTime},#{modifiedUser},#{modifiedTime})
+    </insert>
+    <!--根据knid展示知识条的数据-->
+    <select id="showKnowledgeDetail" resultMap="KnowedgeMap">
+        select knid,ancestor_id,ancestor_name,topic,content from t_knowledge where knid=#{knid}
+    </select>
+
+    <!--删除知识条-->
+    <delete id="deleteKnowledge" >
+        delete from t_knowledge where knid=#{knid}
+    </delete>
+    <!--展示各个板块的知识条-->
+    <select id="showKnowledge" resultMap="KnowedgeMap">
+        select knid,ancestor_name,topic,content from t_knowledge where ancestor_id=#{ancestorId}
+    </select>
+
+    <!--展示所有的知识条-->
+    <select id="showAllKnowledge" resultMap="KnowedgeMap">
+        select topic,content from t_knowledge
+    </select>
+    <!-- 修改知识条，只更新 content 字段 -->
+    <update id="updateKnowledge">
+        UPDATE t_knowledge
+        set
+            <if test="topic!=null">topic = #{topic},</if>
+            <if test="content!=null">content = #{content},</if>
+        modified_user = #{modifiedUser},
+        modified_time = #{modifiedTime}
+
+        WHERE knid = #{knid}
+    </update>
+
+
+
+
+
+
+
+    <!--展示各个板块的知识条-->
+    <select id="showKnowledgeF" resultMap="KnowedgeMap">
+        select knid,ancestor_id,ancestor_name,topic,content
+        from t_knowledge
+        where ancestor_id=#{ancestorId}
+            LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!--展示所有的知识条-->
+    <select id="showAllKnowledgeF" resultMap="KnowedgeMap">
+        select knid,ancestor_id,ancestor_name,topic,content
+        from t_knowledge
+            LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+
+    <!--展示各个板块的知识条-->
+    <select id="countKnowledge" resultType="integer">
+        select count(*)
+        from t_knowledge
+        where ancestor_id=#{ancestorId}
+    </select>
+
+    <!--展示所有的知识条-->
+    <select id="countAllKnowledge" resultType="integer">
+        select count(*)
+        from t_knowledge
+    </select>
+
+
+</mapper>

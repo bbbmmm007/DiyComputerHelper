@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="renderer" content="webkit" />
+	<title>收藏列表 - 电脑商城</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+	<link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css">
+	<link rel="stylesheet" type="text/css" href="../css/layout.css" />
+	<script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+	<script src="../bootstrap3/js/bootstrap.js"></script>
+	<style>
+		.container {
+			margin-top: 50px;
+		}
+
+		.btn-clear-all {
+			margin-bottom: 20px;
+		}
+	</style>
+</head>
+
+<body>
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手</b>
+		<!-- 按钮组 -->
+        <button type="button" class="btn btn-secondary" id="backBtn">返回</button>
+        <button type="button" class="btn btn-info" id="homeBtn">回到主页</button>
+        <button id="cartBtn" class="btn btn-warning header-btn">查看配置车</button>
+    </span>
+</header>
+
+<div class="container">
+	<h2 class="text-center">收藏列表</h2>
+	<!-- 一键清除收藏列表按钮 -->
+	<div class="text-center">
+		<button id="clearAll" class="btn btn-warning btn-clear-all">一键清除所有收藏</button>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-bordered table-striped">
+			<thead>
+			<tr>
+				<th>商品ID</th>
+				<th>商品子分类号</th>
+				<th>商品名称</th>
+				<th>商品价格</th>
+				<th>操作</th>
+			</tr>
+			</thead>
+			<tbody id="collectionList">
+			<!-- 收藏列表由JavaScript动态填充 -->
+			</tbody>
+		</table>
+	</div>
+</div>
+<script src="../js/UserButton.js"></script>
+<script>
+	$(document).ready(function () {
+		// 初始化收藏列表
+		var collectionIds = new Set(JSON.parse(localStorage.getItem('collectionIds')) || []);
+
+		// 加载收藏列表
+		function loadCollections() {
+			$.ajax({
+				url: '/collections/show_collection',
+				type: 'GET',
+				success: function (json) {
+					if (json.state === 200) {
+						var collections = json.data;
+						displayCollections(collections);
+
+						// 更新 collectionIds 状态
+						collectionIds = new Set(collections.map(item => item.id));
+						localStorage.setItem('collectionIds', JSON.stringify(Array.from(collectionIds))); // 保存到 localStorage
+					} else {
+						alert('加载收藏列表失败: ' + json.message);
+					}
+				},
+				error: function () {
+					alert('加载收藏列表失败，服务器错误');
+				}
+			});
+		}
+
+		// 展示收藏列表函数
+		function displayCollections(collections) {
+			$('#collectionList').empty();
+			collections.forEach(function (collection) {
+				var collectionHtml = '<tr>' +
+						'<td>' + collection.id + '</td>' +
+						'<td>' + collection.childId + '</td>' +
+						'<td>' + collection.itemType + '</td>' +
+						'<td>¥' + collection.price + '</td>' +
+						'<td><button onclick="removeFromCollection(' + collection.id + ')" class="btn btn-danger">移除收藏</button></td>' +
+						'</tr>';
+				$('#collectionList').append(collectionHtml);
+			});
+		}
+
+		// 移除收藏函数
+		window.removeFromCollection = function (id) {
+			$.ajax({
+				url: '/collections/delete_collection',
+				type: 'POST',
+				data: { id: id },
+				success: function (json) {
+					if (json.state === 200) {
+						alert('商品已移除收藏');
+						collectionIds.delete(id); // 更新本地收藏状态
+						localStorage.setItem('collectionIds', JSON.stringify(Array.from(collectionIds))); // 同步到 localStorage
+						loadCollections(); // 重新加载收藏列表
+						updateProductButton(id); // 更新商品按钮状态
+					} else {
+						alert('移除收藏失败: ' + json.message);
+					}
+				},
+				error: function () {
+					alert('移除收藏失败，服务器错误');
+				}
+			});
+		};
+
+		// 清除所有收藏的函数
+		$('#clearAll').click(function () {
+			$.ajax({
+				url: '/collections/clear_collection',
+				type: 'POST',
+				success: function (json) {
+					if (json.state === 200) {
+						alert('所有收藏已清除');
+						collectionIds.clear(); // 清空本地收藏状态
+						localStorage.setItem('collectionIds', JSON.stringify([])); // 同步到 localStorage
+						loadCollections(); // 重新加载收藏列表
+						resetProductButtons(); // 重置商品按钮状态
+					} else {
+						alert('清除收藏失败: ' + json.message);
+					}
+				},
+				error: function () {
+					alert('清除收藏失败，服务器错误');
+				}
+			});
+		});
+
+		// 页面加载时展示收藏列表
+		loadCollections();
+	});
+</script>
+
+<footer class="footer">
+	<div class="text-center rights container">
+		<p>作者声明数据只供娱乐</p>
+	</div>
+</footer>
+</body>
+
+</html>

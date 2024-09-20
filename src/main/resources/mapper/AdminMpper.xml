@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhny.computer.mapper.AdminMapper">
+    <resultMap id="AdminMapper" type="com.zhny.computer.entity.Admin">
+        <id column="amid" property="amid"/>
+        <result column="admin_name" property="adminName"/>
+        <result column="created_user" property="createdUser"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="modified_user" property="modifiedUser"/>
+        <result column="modified_time" property="modifiedTime"/>
+    </resultMap>
+    <resultMap id="ProductEntityMap" type="com.zhny.computer.entity.Product">
+        <id column="id" property="id"/>
+        <result column="child_id" property="childId"/>
+        <result column="item_type" property="itemType"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="ancestor_id" property="ancestorId"/>
+        <result column="performance_score" property="performanceScore"/>
+        <result column="created_user" property="createdUser"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="modified_user" property="modifiedUser"/>
+        <result column="modified_time" property="modifiedTime"/>
+    </resultMap>
+    <resultMap id="UserEntityMap" type="com.zhny.computer.entity.User">
+        <id column="uid" property="uid"/>
+        <result column="is_delete" property="isDelete"/>
+        <result column="created_user" property="createdUser"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="modified_user" property="modifiedUser"/>
+        <result column="modified_time" property="modifiedTime"/>
+    </resultMap>
+
+    <resultMap id="UserAgeGenderDistributionResultMap" type="com.zhny.computer.vo.UserDistributionVO">
+        <result property="ageRange" column="age_range"/>
+        <result property="gender" column="gender"/>
+        <result property="count" column="count"/>
+    </resultMap>
+
+
+    <!--注册管理员-->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="amid">
+        insert into admin(
+            admin_name,`password`,
+            created_user,created_time,modified_user,modified_time
+        ) values (
+                     #{adminName},#{password},
+                     #{createdUser},#{createdTime},#{modifiedUser},#{modifiedTime}
+                 )
+    </insert>
+
+
+
+    <!--根据用户名查询管理员信息-->
+    <select id="findByname" resultMap="AdminMapper">
+        select * from admin where admin_name=#{adminName}
+    </select>
+
+    <!--删除用户-->
+    <delete id="deleteUser">
+        delete from t_user where uid = #{uid}
+    </delete>
+
+    <!--管理员更改密码操作-->
+    <update id="updatePasswordByAmid">
+        update admin set
+                          `password`=#{password},
+                          modified_user=#{modifiedUser},
+                          modified_time=#{modifiedTime}
+        where amid=#{amid}
+    </update>
+
+
+
+    <!--根据amid查询管理员信息-->
+    <select id="findByAmid" resultMap="AdminMapper">
+        select * from admin where amid=#{amid}
+    </select>
+
+
+    <!--添加商品-->
+    <insert id="insertProduct" useGeneratedKeys="true" keyProperty="id">
+        insert into t_product(child_id,parent_id,ancestor_id,item_type,price,image,performance_score,salt,created_user,status,created_time,modified_user,modified_time)
+        values (#{childId},#{parentId},#{ancestorId},#{itemType},#{price},#{image},#{performanceScore},#{salt},#{createdUser},#{status},#{createdTime},#{modifiedUser},#{modifiedTime})
+    </insert>
+
+    <!--删除商品-->
+    <delete id="deleteProduct">
+        delete from t_product where id=#{id}
+    </delete>
+
+    <!--更新商品信息-->
+    <update id="updateProduct">
+        UPDATE t_product
+        <set>
+            <if test="itemType != null">item_type = #{itemType},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="image != null">image = #{image},</if>
+            <if test="salt != null">salt = #{salt},</if>
+            <if test="performanceScore != null">performanceScore = #{performanceScore},</if>
+            modified_user = #{modifiedUser},
+            modified_time = #{modifiedTime}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!--用来显示用户信息 查看用户的年龄性别分布界面-->
+    <select id="getUserAgeGenderDistribution" resultMap="UserAgeGenderDistributionResultMap">
+        SELECT
+            CASE
+                WHEN age BETWEEN 0 AND 18 THEN '0-18'
+                WHEN age BETWEEN 19 AND 30 THEN '19-30'
+                WHEN age BETWEEN 31 AND 40 THEN '31-40'
+                WHEN age BETWEEN 41 AND 50 THEN '41-50'
+                ELSE '50+'
+                END AS age_range,
+            gender,
+            COUNT(*) AS count
+        FROM t_user
+        where is_delete = 0
+        GROUP BY age_range, gender;
+    </select>
+
+
+    <!--用来显示用户信息 删除用户的界面-->
+    <select id="selectUser" resultMap="UserEntityMap">
+        select uid,username,age,gender
+        from t_user where is_delete=#{isDelete}
+    </select>
+
+
+    <!--删除管理员-->
+    <delete id="deleteAdmin" >
+        delete from admin where amid=#{amid}
+    </delete>
+ </mapper>

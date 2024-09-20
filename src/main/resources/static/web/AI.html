@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识问答助手</title>
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <script src="../bootstrap3/js/bootstrap.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 50px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #questionInput {
+            margin-bottom: 20px;
+        }
+
+        .suggestions {
+            margin-top: 20px;
+        }
+
+        .suggestions h4 {
+            margin-bottom: 10px;
+        }
+
+        .suggestion-item {
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        #responseOutput {
+            background-color: #f1f1f1;
+            min-height: 100px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .autocomplete-list {
+            list-style-type: none;
+            padding-left: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            position: absolute;
+            background-color: white;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .autocomplete-list li {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .autocomplete-list li:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手</b>
+        <!-- 按钮组 -->
+        <button type="button" class="btn btn-info" id="backBtn">返回</button>
+        <button type="button" class="btn btn-info" id="homeBtn">回到主页</button>
+        <button id="collectionBtn" class="btn btn-info header-btn">我的收藏</button>
+        <button id="cartBtn" class="btn btn-info header-btn">查看配置车</button>
+        <button type="button" class="btn btn-warning header-btn" id="exitLogin">退出登录</button>
+    </span>
+</header>
+<div class="container">
+    <div class="text-center">
+        <h1>知识问答助手</h1>
+        <p>基于电脑相关的知识库，输入问题获取答案！</p>
+    </div>
+
+    <div class="form-group position-relative">
+        <label for="questionInput">请输入您的问题：</label>
+        <input type="text" class="form-control" id="questionInput" placeholder="例如：显卡">
+        <ul id="autocompleteList" class="autocomplete-list"></ul> <!-- 模糊搜索提示列表 -->
+        <button id="askButton" class="btn btn-primary mt-3">提问</button>
+    </div>
+
+    <h3 class="mt-4">回答：</h3>
+    <div id="responseOutput" class="border rounded p-3"></div>
+
+    <div class="suggestions">
+        <h4>你可以问：</h4>
+        <ul class="list-group" id="suggestionList">
+            <!-- 随机 topic 提示将在这里显示 -->
+        </ul>
+    </div>
+</div>
+
+<script>
+    let knowledgeBase = []; // 存储知识库数据
+
+    $(document).ready(function () {
+        // 获取所有知识条目
+        $.ajax({
+            url: '/knowledges/show_all_knowledge', // 替换为你的接口路径
+            type: 'GET',
+            success: function (json) {
+                if (json.state === 200) {
+                    knowledgeBase = json.data; // 存储知识库数据
+                    displayRandomSuggestions(); // 显示随机的 5 个提示
+                } else {
+                    alert('加载知识库失败：' + json.message);
+                }
+            },
+            error: function () {
+                alert('加载知识库失败，服务器错误。');
+            }
+        });
+
+        // 处理模糊搜索提示
+        $('#questionInput').on('input', function () {
+            const query = $(this).val().trim();
+            if (query) {
+                showAutocompleteSuggestions(query);
+            } else {
+                $('#autocompleteList').empty(); // 清空提示
+            }
+        });
+
+        // 点击建议时自动填充问题并获取答案
+        $('#suggestionList').on('click', '.suggestion-item', function () {
+            const topic = $(this).text();
+            $('#questionInput').val(topic);
+            getAnswerAndDisplay(topic);
+        });
+
+        // 点击模糊搜索提示时自动填充问题并获取答案
+        $('#autocompleteList').on('click', 'li', function () {
+            const topic = $(this).text();
+            $('#questionInput').val(topic);
+            $('#autocompleteList').empty(); // 关闭提示
+            getAnswerAndDisplay(topic); // 获取答案并显示
+        });
+
+        // 用户点击“提问”按钮时
+        $('#askButton').click(function () {
+            const question = $('#questionInput').val().trim();
+            if (question) {
+                getAnswerAndDisplay(question);
+            } else {
+                alert('请输入问题！');
+            }
+        });
+    });
+
+    // 根据问题查找答案并显示
+    function getAnswerAndDisplay(question) {
+        const answer = getAnswer(question);
+        $('#responseOutput').text(answer);
+    }
+
+    // 查找答案
+    function getAnswer(question) {
+        const foundKnowledge = knowledgeBase.find(knowledge => knowledge.topic === question);
+        return foundKnowledge ? foundKnowledge.content : '抱歉，我无法回答该问题。';
+    }
+
+    // 随机选择 5 条建议
+    function displayRandomSuggestions() {
+        const suggestionList = $('#suggestionList');
+        suggestionList.empty();
+
+        if (knowledgeBase.length === 0) return;
+
+        // 随机从知识库中选择 5 条
+        const randomSuggestions = knowledgeBase
+            .sort(() => 0.5 - Math.random()) // 随机排序
+            .slice(0, 5); // 取前 5 个
+
+        // 显示随机建议
+        randomSuggestions.forEach(item => {
+            suggestionList.append(`<li class="list-group-item suggestion-item">${item.topic}</li>`);
+        });
+    }
+
+    // 显示模糊搜索提示
+    function showAutocompleteSuggestions(query) {
+        const matches = knowledgeBase.filter(item => item.topic.includes(query));
+        const autocompleteList = $('#autocompleteList');
+        autocompleteList.empty();
+
+        matches.forEach(match => {
+            autocompleteList.append(`<li>${match.topic}</li>`);
+        });
+    }
+</script>
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+
+</html>

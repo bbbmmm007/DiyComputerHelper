@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css">
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <script src="../bootstrap3/js/bootstrap.js"></script>
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+
+        .table img {
+            max-width: 100px;
+        }
+
+        .total-price {
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 class="text-center">我的配置单</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead>
+            <tr>
+                <th>配置单ID</th>
+                <th>配置时间</th>
+                <th>总价</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody id="profileList">
+            <!-- 配置单列表由JavaScript动态填充 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // 加载配置单列表
+        loadProfileList();
+
+        function loadProfileList() {
+            $.ajax({
+                url: '/profiles/showUconfig', // 获取所有配置单的接口
+                type: 'GET',
+                success: function (json) {
+                    if (json.state === 200) {
+                        var profiles = json.data;
+                        if (profiles.length === 0) {
+                            $("#profileList").append("<tr><td colspan='4' class='text-center'>暂无配置单</td></tr>");
+                        } else {
+                            displayProfileList(profiles);
+                        }
+                    } else {
+                        alert("加载配置单列表失败：" + json.message);
+                    }
+                },
+                error: function () {
+                    alert("加载配置单列表失败，服务器错误。");
+                }
+            });
+        }
+
+        // 显示配置单列表
+        function displayProfileList(profiles) {
+            var $profileList = $('#profileList');
+            $profileList.empty();
+            $.each(profiles, function (index, profile) {
+                var profileHtml = '<tr>' +
+                    '<td>' + profile.id + '</td>' +
+                    '<td>' + profile.createdTime + '</td>' +
+                    '<td>¥' + profile.totalPrice + '</td>' +
+                    '<td><a href="profileDetail.html?id=' + profile.id + '" class="btn btn-info">查看详情</a></td>' +
+                    '</tr>';
+                $profileList.append(profileHtml);
+            });
+        }
+    });
+</script>
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+</html>

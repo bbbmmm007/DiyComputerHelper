@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit" />
+    <title>新增商品 - DIY小助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="../css/layout.css" />
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <script src="../bootstrap3/js/bootstrap.js"></script>
+    <style>
+        .container {
+            margin-top: 50px;
+            max-width: 600px;
+        }
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手管理员页面--增加商品</b>
+        <!-- 按钮组 -->
+        <button type="button" class="btn btn-info" id="backBtn">返回</button>
+        <button type="button" class="btn btn-info" id="homeBtn">回到主页</button>
+    </span>
+</header>
+<div class="container">
+    <h2 class="text-center">新增商品</h2>
+    <form id="addProductForm">
+        <div class="form-group">
+            <label for="categorySelect1">商品分类</label>
+            <select class="form-control" id="categorySelect1" required>
+                <option value="">请选择分类</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="categorySelect2">父分类</label>
+            <select class="form-control" id="categorySelect2" required disabled>
+                <option value="">请选择父分类</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="categorySelect3">子分类</label>
+            <select class="form-control" id="categorySelect3" required disabled>
+                <option value="">请选择子分类</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="itemType">商品名称</label>
+            <input type="text" class="form-control" id="itemType" placeholder="请输入商品名称" required>
+        </div>
+        <div class="form-group">
+            <label for="price">商品价格</label>
+            <input type="number" class="form-control" id="price" placeholder="请输入商品价格" required>
+        </div>
+        <div class="form-group">
+            <label for="image">商品图片URL</label>
+            <input type="text" class="form-control" id="image" placeholder="请输入商品图片URL" required>
+        </div>
+        <div class="form-group">
+            <label for="image">商品性价比数值</label>
+            <input type="text" class="form-control" id="performanceScore" placeholder="请输入商品的性价比数值(数值越高性价比越高)" required>
+        </div>
+        <div class="form-group">
+            <label for="image">商品颜值数值</label>
+            <input type="text" class="form-control" id="salt" placeholder="请输入商品的颜值数值(数值越高颜值越高)" required>
+        </div>
+        <button type="submit" class="btn btn-primary">新增商品</button>
+    </form>
+</div>
+<script src="../js/categories.js"></script>
+<script src="../js/AdminButton.js"></script>
+<script>
+    $(document).ready(function () {
+
+        // 填充第一级分类
+        for (var key in categories) {
+            $('#categorySelect1').append('<option value="' + key + '">' + key + '</option>');
+        }
+
+        // 第一级分类选择事件
+        $('#categorySelect1').change(function () {
+            var selectedCategory = $(this).val();
+            $('#categorySelect2').empty().append('<option value="">请选择父分类</option>').prop('disabled', false);
+            $('#categorySelect3').empty().append('<option value="">请选择子分类</option>').prop('disabled', true);
+            if (selectedCategory && categories[selectedCategory]) {
+                for (var key in categories[selectedCategory]) {
+                    if (key !== 'name' && key !== 'id') {
+                        $('#categorySelect2').append('<option value="' + key + '">' + categories[selectedCategory][key].name + '</option>');
+                    }
+                }
+            }
+        });
+
+        // 第二级分类选择事件
+        $('#categorySelect2').change(function () {
+            var selectedCategory = $('#categorySelect1').val();
+            var selectedSubCategory = $(this).val();
+            $('#categorySelect3').empty().append('<option value="">请选择子分类</option>').prop('disabled', false);
+            if (selectedSubCategory && categories[selectedCategory] && categories[selectedCategory][selectedSubCategory]) {
+                var children = categories[selectedCategory][selectedSubCategory].children;
+                for (var key in children) {
+                    $('#categorySelect3').append('<option value="' + key + '">' + children[key] + '</option>');
+                }
+            }
+        });
+
+        // 提交表单事件
+        $('#addProductForm').on('submit', function (e) {
+            e.preventDefault();
+            var ancestorId = categories[$('#categorySelect1').val()].id; // 直接获取ancestorId
+            var parentId = $('#categorySelect2').val();
+            var childId = $('#categorySelect3').val();
+            var itemType = $('#itemType').val();
+            var price = $('#price').val();
+            var image = $('#image').val();
+            var performanceScore = $('#performanceScore').val();
+            var salt = $('#salt').val();
+
+            if (!childId || !itemType || !price || !image || !performanceScore || !salt) {
+                alert("请填写所有必填项！");
+                return;
+            }
+
+            $.ajax({
+                url: '/admin/add_product',
+                type: 'POST',
+                data: {
+                    ancestorId: ancestorId,
+                    parentId: parentId,
+                    childId: childId,
+                    itemType: itemType,
+                    price: price,
+                    image: image,
+                    performanceScore: performanceScore,
+                    salt: salt
+
+                },
+                success: function (json) {
+                    if (json.state === 200) {
+                        alert('商品新增成功');
+                        // 刷新页面或跳转到其他页面
+                    } else {
+                        alert('商品新增失败: ' + json.message);
+                    }
+                },
+                error: function () {
+                    alert('商品新增失败，服务器错误。');
+                }
+            });
+        });
+    });
+
+</script>
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+
+</html>

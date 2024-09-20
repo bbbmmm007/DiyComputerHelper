@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品分类结构 - 电脑DIY小助手</title>
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css">
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <style>
+        /* 树形结构的基本样式 */
+        .tree ul {
+            list-style-type: none;
+            margin-left: 20px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        /* 竖直线条，显示父子关系 */
+        .tree ul::before {
+            content: '';
+            border-left: 2px solid #ccc;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+        }
+
+        /* 每个li的样式，包括水平线 */
+        .tree li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .tree li::before {
+            content: '';
+            border-top: 2px solid #ccc;
+            position: absolute;
+            top: 15px;
+            left: 0;
+            width: 20px;
+        }
+
+        /* 可点击的父节点 */
+        .tree-toggle {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* 节点的高亮效果 */
+        .tree span {
+            display: inline-block;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .tree span:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手管理员页面--商品分类结构</b>
+        <!-- 按钮组 -->
+        <button type="button" class="btn btn-info" id="backBtn">返回</button>
+        <button type="button" class="btn btn-info" id="homeBtn">回到主页</button>
+    </span>
+</header>
+<div class="container">
+    <h2>分类管理</h2>
+    <div id="categoryTree" class="tree"></div>
+</div>
+<script src="../js/categories.js"></script>
+<script src="../js/AdminButton.js"></script>
+<script>
+    $(document).ready(function () {
+        // 树形分类数据
+
+
+        // 递归构建树形结构
+        function buildTree(node, data) {
+            const ul = $('<ul></ul>');
+            $.each(data, function (key, value) {
+                const li = $('<li></li>');
+
+                if (typeof value === 'object' && value.name) {
+                    const toggle = $('<span class="tree-toggle">' + value.name + '</span>');
+                    toggle.click(function () {
+                        $(this).next('ul').toggle();  // 展开/折叠子分类
+                    });
+
+                    li.append(toggle);
+                    li.append(buildTree(null, value.children));
+                } else {
+                    li.append('<span>' + value + '</span>');  // 子节点名称
+                }
+
+                ul.append(li);
+            });
+
+            if (node) {
+                $(node).append(ul);
+            } else {
+                return ul;
+            }
+        }
+
+        // 初始化树形结构
+        buildTree('#categoryTree', categories);
+    });
+</script>
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+</html>

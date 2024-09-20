@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="../css/layout.css" />
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <script src="../bootstrap3/js/bootstrap.js"></script>
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+
+        .total-price {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .btn-clear {
+            margin-top: 20px;
+        }
+
+        .table img {
+            max-width: 100px;
+        }
+
+        #result {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手</b>
+        <!-- 按钮组 -->
+        <button type="button" class="btn btn-secondary" id="backBtn">返回</button>
+        <button type="button" class="btn btn-info" id="homeBtn">回到主页</button>
+        <button id="collectionBtn" class="btn btn-info header-btn">我的收藏</button>
+    </span>
+</header>
+
+<div class="container">
+    <h2 class="text-center">我的配置车</h2>
+    <div class="text-right">
+        <div class="btn-group d-flex" role="group" aria-label="Button group">
+            <button id="clearCartBtn" class="btn btn-danger flex-fill btn-clear">一键清空配置车</button>
+            <button id="generateConfigBtn" class="btn btn-success flex-fill btn-clear">生成配置单</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead>
+            <tr>
+                <th>商品ID</th>
+                <th>商品分类</th>
+                <th>商品名称</th>
+                <th>商品价格</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody id="cartList">
+            <!-- 配置车商品列表由JavaScript动态填充 -->
+            </tbody>
+        </table>
+    </div>
+    <div class="text-right">
+        <p id="totalPrice" class="total-price">总价: ¥0</p>
+    </div>
+    <div id="result" class="text-center"></div> <!-- 配置单结果展示区 -->
+</div>
+
+<script src="../js/UserButton.js"></script>
+<script>
+    $(document).ready(function () {
+        // 加载配置车商品列表
+        loadCartItems();
+
+        // 一键清空配置车
+        $('#clearCartBtn').click(function () {
+            if (confirm("您确认要清空配置车吗？")) {
+                $.ajax({
+                    url: '/carts/clear_carts',
+                    type: 'POST',
+                    success: function (json) {
+                        if (json.state === 200) {
+                            alert('配置车已清空');
+                            loadCartItems();  // 重新加载配置车列表
+                            resetProductButtons(); // 重置所有商品的按钮状态
+                            localStorage.setItem('cartIds', JSON.stringify([]));  // 清空 LocalStorage 中的配置车状态
+                        } else {
+                            alert('清空失败: ' + json.message);
+                        }
+                    },
+                    error: function () {
+                        alert('清空失败，服务器错误');
+                    }
+                });
+            }
+        });
+
+        // 加载配置车商品
+        function loadCartItems() {
+            $("#cartList").empty();
+            $.ajax({
+                url: '/carts/show_carts',
+                type: 'GET',
+                success: function (json) {
+                    if (json.state === 200) {
+                        var cartVO = json.data;
+                        var cartList = cartVO.cartList;
+                        var totalPrice = cartVO.totalPrice;
+                        var cartIds = []; // 存储所有商品的 ID
+
+                        if (cartList.length === 0) {
+                            $("#cartList").append("<tr><td colspan='5' class='text-center'>您的配置车中没有商品</td></tr>");
+                        } else {
+                            displayCartItems(cartList);
+                            $('#totalPrice').text('总价: ¥' + totalPrice.toFixed(2));
+
+                            // 收集所有商品的 ID，用于更新 LocalStorage
+                            $.each(cartList, function (index, cartItem) {
+                                cartIds.push(cartItem.id);
+                            });
+                        }
+
+                        // 更新 LocalStorage 中的配置车状态
+                        localStorage.setItem('cartIds', JSON.stringify(cartIds));
+                    } else {
+                        alert("加载配置车数据失败：" + json.message);
+                    }
+                },
+                error: function () {
+                    alert("加载配置车数据失败，服务器错误。");
+                }
+            });
+        }
+
+        // 显示配置车商品列表
+        function displayCartItems(cartList) {
+            var $cartList = $('#cartList');
+            $cartList.empty();
+            $.each(cartList, function (index, cartItem) {
+                var cartItemHtml = '<tr>' +
+                    '<td>' + cartItem.id + '</td>' +
+                    '<td>' + cartItem.ancestorName + '</td>' +
+                    '<td>' + cartItem.itemType + '</td>' +
+                    '<td>¥' + cartItem.price + '</td>' +
+                    '<td><button onclick="removeFromCart(' + cartItem.id + ')" class="btn btn-danger">移除</button></td>' +
+                    '</tr>';
+                $cartList.append(cartItemHtml);
+            });
+        }
+
+        // 移除商品函数
+        window.removeFromCart = function (id) {
+            $.ajax({
+                url: '/carts/delete_carts',
+                type: 'POST',
+                data: { id: id },
+                success: function (json) {
+                    if (json.state === 200) {
+                        alert('商品已移除');
+                        loadCartItems(); // 重新加载配置车商品列表
+                        updateProductButton(id); // 更新对应商品按钮的状态
+                    } else {
+                        alert('移除失败: ' + json.message);
+                    }
+                },
+                error: function () {
+                    alert('移除失败，服务器错误');
+                }
+            });
+        };
+
+        // 更新商品的按钮状态（移除时）
+        function updateProductButton(productId) {
+            var productButton = $('#product-' + productId + ' .cart-button');  // 假设商品按钮有唯一的标识符
+            if (productButton.length) {
+                productButton.text('加入配置车').prop('disabled', false);
+            }
+        }
+
+        // 清空配置车时重置所有商品的按钮状态
+        function resetProductButtons() {
+            $('.cart-button').each(function () {
+                $(this).text('加入配置车').prop('disabled', false);  // 让按钮可点击
+            });
+            $('#totalPrice').text('总价: ¥0');
+        }
+
+
+        // 生成配置单
+        $('#generateConfigBtn').click(function () {
+            var config = {
+                items: [], // 存储商品信息
+                totalPrice: 0
+            };
+
+            // 遍历配置车中的商品，构建配置
+            $('#cartList tr').each(function () {
+                var $row = $(this);
+                var item = {
+                    ancestorName: $row.find('td:eq(1)').text(),
+                    itemType: $row.find('td:eq(2)').text(),
+                    price: parseFloat($row.find('td:eq(3)').text().replace('¥', ''))
+                };
+                config.items.push(item);
+                config.totalPrice += item.price; // 计算总价
+            });
+
+            // 生成配置单 HTML
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+    <h3>生成的配置</h3>
+    <ul style="list-style-type: none; padding: 0;">
+        ${config.items.map(item => `
+            <li style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="flex: 1; text-align: left;">${item.ancestorName}</span>
+                <span style="flex: 1; text-align: left;">(${item.itemType})</span>
+                <span style="flex: 1; text-align: right;">¥${item.price.toFixed(2)}</span>
+            </li>
+        `).join('')}
+    </ul>
+    <p style="text-align: right;"><strong>总价: ¥${config.totalPrice.toFixed(2)}</strong></p>
+`;
+
+        });
+    });
+</script>
+
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+
+</html>

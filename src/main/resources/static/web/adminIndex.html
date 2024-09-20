@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <!--edge浏览器H5兼容设置-->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!--360浏览器H5兼容设置-->
+    <meta name="renderer" content="webkit" />
+    <title>电脑DIY小助手 - 管理后台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--导入核心文件-->
+    <script src="../bootstrap3/js/holder.js"></script>
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet" type="text/css">
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <script src="../bootstrap3/js/bootstrap.js"></script>
+    <!-- 字体图标 -->
+    <link rel="stylesheet" href="/bootstrap3/font-awesome-4.7.0/css/font-awesome.css" />
+    <link rel="stylesheet" type="text/css" href="/css/top.css" />
+    <link rel="stylesheet" type="text/css" href="/css/index.css" />
+    <link rel="stylesheet" type="text/css" href="/css/layout.css" />
+    <link rel="stylesheet" type="text/css" href="/css/footer.css" />
+
+    <style>
+        /* 核心样式改进 */
+        .section-header {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .panel {
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .panel:hover {
+            transform: scale(1.05);
+        }
+
+        .panel-heading {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .panel-body {
+            text-align: center;
+            padding: 30px;
+            color: white;
+        }
+
+        .panel-primary {
+            background-color: #337ab7;
+        }
+
+        .panel-success {
+            background-color: #5cb85c;
+        }
+
+        .panel-info {
+            background-color: #5bc0de;
+        }
+
+        .panel-warning {
+            background-color: #f0ad4e;
+        }
+
+        .panel-body i {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .panel-body ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .panel-body ul li {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .panel-body ul li a {
+            text-decoration: none;
+            color: white;
+        }
+
+        .panel-body ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .logout-section {
+            margin-top: 30px;
+        }
+
+        .logout-section .btn {
+            background-color: #dc3545;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logout-section .btn:hover {
+            background-color: #c82333;
+        }
+
+        /* 右侧账户操作模块样式 */
+        .admin-operations {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            width: 250px;
+        }
+    </style>
+</head>
+
+<body>
+<!--头部-->
+<header class="header">
+    <span class="pull-right"><small>欢迎访问</small><b>电脑商城管理后台</b></span>
+</header>
+
+<!--主体内容-->
+<div class="container mycontent">
+    <div class="section-header">
+        <h2>请选择要浏览的管理页面</h2>
+    </div>
+
+    <!-- 左侧功能板块 -->
+    <div class="row">
+        <div class="col-md-9">
+            <!-- 用户管理板块 -->
+            <div class="panel panel-primary">
+                <div class="panel-heading">用户管理</div>
+                <div class="panel-body">
+                    <i class="fa fa-users"></i>
+                    <ul>
+                        <li><a href="adminUserFenye.html">管理用户页面</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 商品管理板块 -->
+            <div class="panel panel-success">
+                <div class="panel-heading">商品管理</div>
+                <div class="panel-body">
+                    <i class="fa fa-cubes"></i>
+                    <ul>
+                        <li><a href="adminAddProduct.html">新增商品页面</a></li>
+                        <li><a href="adminCategory.html">商品分类页面</a></li>
+                        <li><a href="adminManageProduct.html">管理商品页面</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 知识词条管理板块 -->
+            <div class="panel panel-info">
+                <div class="panel-heading">知识词条管理</div>
+                <div class="panel-body">
+                    <i class="fa fa-book"></i>
+                    <ul>
+                        <li><a href="adminKnowledge.html">管理知识词条</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧账户操作模块 -->
+        <div class="col-md-3 admin-operations">
+            <!-- 更改密码 -->
+            <div class="panel panel-warning">
+                <div class="panel-heading">账户操作</div>
+                <div class="panel-body">
+                    <i class="fa fa-key"></i>
+                    <ul>
+                        <li><a href="adminPassword.html">更改密码</a></li>
+                        <li><button id="deleteAdminBtn" class="btn btn-danger">注销账户</button></li>
+                        <li><a href="adminLogin.html">退出登录</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页面底部-备案号 #footer -->
+<div class="col-md-12 text-center bottom"></div>
+
+<!-- JavaScript 逻辑 -->
+<script>
+    $(document).ready(function () {
+        $("#deleteAdminBtn").click(function () {
+            if (confirm("您确认要注销您的管理员账户吗？此操作无法恢复！")) {
+                $.ajax({
+                    url: "/admin/delete_admin",
+                    type: "POST",
+                    success: function (json) {
+                        if (json.state === 200) {
+                            alert("账户已成功注销。");
+                            window.location.href = "adminLogin.html"; // 注销后重定向到登录页面
+                        } else {
+                            alert("注销失败：" + json.message);
+                        }
+                    },
+                    error: function () {
+                        alert("注销失败，服务器错误。");
+                    }
+                });
+            }
+        });
+    });
+</script>
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+
+</html>

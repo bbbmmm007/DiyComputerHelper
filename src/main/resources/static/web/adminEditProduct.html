@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit" />
+    <title>编辑商品信息 - DIY小助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="../css/layout.css" />
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <script src="../bootstrap3/js/bootstrap.js"></script>
+    <script src="../js/categories.js"></script>
+    <script src="../js/categoriesSelect.js"></script>
+    <script src="../js/productManageFen.js"></script>
+    <script src="../js/countProduct.js"></script>
+    <style>
+        .container {
+            margin-top: 50px;
+            max-width: 600px;
+        }
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手管理员页面--编辑商品</b>
+        <!-- 按钮组 -->
+        <button type="button" class="btn btn-info" id="backBtn">返回</button>
+        <button type="button" class="btn btn-info" id="homeBtn">回到主页</button>
+    </span>
+</header>
+<div class="container">
+    <h2 class="text-center">编辑商品信息</h2>
+    <form id="updateProductForm">
+        <div class="form-group">
+            <label for="itemType">商品名称</label>
+            <input type="text" class="form-control" id="itemType" placeholder="请输入商品名称" required>
+        </div>
+        <div class="form-group">
+            <label for="price">商品价格</label>
+            <input type="number" class="form-control" id="price" placeholder="请输入商品价格" required>
+        </div>
+        <div class="form-group">
+            <label for="image">商品图片URL</label>
+            <input type="text" class="form-control" id="image" placeholder="请输入商品图片URL" required>
+        </div>
+        <button type="submit" class="btn btn-primary">更新商品</button>
+    </form>
+</div>
+<script src="../js/AdminButton.js"></script>
+<script>
+    $(document).ready(function () {
+        // 从 URL 中获取 productId 参数
+        var productId = getQueryParameter("id");
+        if (!productId) {
+            alert("无效的商品ID！");
+            return;
+        }
+
+        // 获取商品详细信息并填充表单
+        $.ajax({
+            url: '/products/show_details/' + productId,  // 使用商品ID获取商品详情的接口
+            type: 'GET',
+            success: function (response) {
+                if (response.state === 200) {
+                    var product = response.data;
+                    $('#itemType').val(product.itemType);  // 填充商品名称
+                    $('#price').val(product.price);  // 填充商品价格
+                    $('#image').val(product.image);// 填充商品图片URL
+                    $('#salt').val(product.salt);
+                    $('#performanceScore').val(product.performanceScore);
+                } else {
+                    alert('获取商品信息失败：' + response.message);
+                }
+            },
+            error: function () {
+                alert('无法加载商品信息，服务器错误。');
+            }
+        });
+
+        // 提交更新表单
+        $('#updateProductForm').on('submit', function (e) {
+            e.preventDefault();  // 阻止表单默认提交行为
+
+            // 获取表单中的商品信息
+            var itemType = $('#itemType').val();
+            var price = $('#price').val();
+            var image = $('#image').val();
+            var salt= $('#salt').val();
+            var performanceScore =  $('#performanceScore').val();
+
+            // 检查用户是否输入了所有字段
+            if (!itemType || !price || !image) {
+                alert("请填写所有必填项！");
+                return;
+            }
+
+            // 调用更新接口，传递商品信息
+            $.ajax({
+                url: '/admin/update_product/' + productId,  // 使用商品ID更新商品信息的接口
+                type: 'POST',
+                data: {
+                    itemType: itemType,
+                    price: price,
+                    image: image,
+                    salt: salt,
+                    performanceScore: performanceScore
+                },
+                success: function (json) {
+                    if (json.state === 200) {
+                        alert('商品更新成功');
+                        // 可能重定向到其他页面或刷新当前页面
+                        window.location.href = 'adminManageProduct.html';
+                        loadProducts(currentPage, $('#categorySelect1').val(), $('#categorySelect2').val(), $('#categorySelect3').val());
+                        // 假设更新成功后跳转到商品列表页
+                    } else {
+                        alert('商品更新失败: ' + json.message);
+                    }
+                },
+                error: function () {
+                    alert('商品更新失败，服务器错误。');
+                }
+            });
+        });
+
+        // 从 URL 中获取 query 参数的工具函数
+        function getQueryParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+    });
+</script>
+
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+
+</html>

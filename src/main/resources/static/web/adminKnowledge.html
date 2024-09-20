@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>词条列表 - 电脑DIY小助手</title>
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="../css/layout.css">
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+
+        .header-btn {
+            margin-left: 10px;
+        }
+
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手--知识科普</b>
+        <button type="button" class="btn btn-secondary" id="backBtn">返回</button>
+        <button type="button" class="btn btn-info" id="homeBtn">回到主页</button>
+        <button id="addKnowledgeBtn" class="btn btn-success header-btn">新增词条</button> <!-- 新增词条按钮 -->
+    </span>
+</header>
+
+<div class="container">
+    <h2 class="text-center">词条列表</h2>
+
+    <!-- 分类选择器 -->
+    <div class="text-center">
+        <select id="categorySelect1" class="form-control" style="display: inline-block; width: auto;">
+            <option value="">选择词条分类</option>
+        </select>
+        <span id="categoryCount" class="category-count">词条数量: 0</span>
+    </div>
+
+    <!-- 词条列表表格 -->
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>词条ID</th>
+                <th>词条主题</th>
+                <th>词条内容</th>
+                <th>操作</th> <!-- 新增操作列 -->
+            </tr>
+            </thead>
+            <tbody id="knowledgeList">
+            <!-- 词条列表由JavaScript动态填充 -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页控件 -->
+    <div id="pagination" class="text-center">
+        <ul class="pagination">
+            <!-- 分页按钮由JavaScript动态填充 -->
+        </ul>
+    </div>
+</div>
+
+<!-- 引入外部 JavaScript 文件 -->
+<script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+<script src="../bootstrap3/js/bootstrap.js"></script>
+<script src="../js/categories.js"></script>
+<script src="../js/categoriesSelect.js"></script>
+<script src="../js/AdminButton.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var pageSize = 10; // 每页显示的词条数量
+        var totalPages = 1; // 总页数，初始为1
+        var currentPage = 1; // 当前页数，初始为1
+
+        initialize(); // 初始化
+
+        function initialize() {
+            populateCategorySelect1(); // 填充第一级分类
+            setupEventListeners(); // 设置事件监听
+            loadProducts(currentPage); // 初次加载时显示第一页词条
+            updateCategoryCount(); // 初始化时显示所有词条数量
+        }
+
+        function setupEventListeners() {
+            $('#categorySelect1').change(function () {
+                var ancestorId = $(this).val();
+                updateCategoryCount(ancestorId); // 更新分类下的词条数量
+                currentPage = 1; // 切换分类时重置页码
+                loadProducts(currentPage, ancestorId); // 加载词条
+            });
+
+            $(document).on('click', '.pagination a', function (event) {
+                event.preventDefault();
+                var page = $(this).data('page');
+
+                if (page >= 1 && page <= totalPages) {
+                    currentPage = page;
+                    loadProducts(currentPage, $('#categorySelect1').val());
+                }
+            });
+
+            // 新增词条按钮点击事件
+            $('#addKnowledgeBtn').click(function () {
+                window.location.href = 'adminAddKnowledge.html'; // 跳转到新增词条页面
+            });
+        }
+
+        function loadProducts(pageNumber, ancestorId = '') {
+            var url = '/knowledges/show_all_knowledgeF/' + pageNumber + '/' + pageSize;
+
+            if (ancestorId) {
+                url = '/knowledges/show_knowledgeF/' + ancestorId + '/' + pageNumber + '/' + pageSize;
+            }
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function (json) {
+                    if (json.state === 200) {
+                        var knowledges = json.data;
+                        var $knowledgeList = $('#knowledgeList');
+                        $knowledgeList.empty();
+
+                        // 插入新的词条数据
+                        $.each(knowledges, function (index, knowledge) {
+                            var knowledgeRow = '<tr id="knowledge-' + knowledge.knid + '">' +
+                                '<td>' + knowledge.knid + '</td>' + // 词条ID
+                                '<td>' + knowledge.topic + '</td>' +
+                                '<td>' + knowledge.content + '</td>' +
+                                '<td>' +
+                                '<button class="btn btn-primary edit-btn" data-id="' + knowledge.knid + '">编辑</button> ' +
+                                '<button class="btn btn-danger delete-btn" data-id="' + knowledge.knid + '">删除</button>' +
+                                '</td>' +
+                                '</tr>';
+                            $('#knowledgeList').append(knowledgeRow);
+                        });
+
+                        // 设置分页
+                        setupPagination(ancestorId);
+                        updateCategoryCount(ancestorId);
+                    } else {
+                        alert('加载词条失败: ' + json.message);
+                    }
+                },
+                error: function () {
+                    alert('加载词条失败，服务器错误');
+                }
+            });
+        }
+
+        // 删除词条
+        $(document).on('click', '.delete-btn', function () {
+            var knid = $(this).data('id');
+            if (confirm('确定要删除该词条吗？')) {
+                $.ajax({
+                    url: '/knowledges/delete_knowledge/' + knid +'/',
+                    type: 'POST',
+                    success: function (json) {
+                        if (json.state === 200) {
+                            alert('词条删除成功');
+                            loadProducts(currentPage); // 重新加载当前页面的词条
+                        } else {
+                            alert('删除失败: ' + json.message);
+                        }
+                    },
+                    error: function () {
+                        alert('删除失败，服务器错误');
+                    }
+                });
+            }
+        });
+
+        // 编辑词条
+        $(document).on('click', '.edit-btn', function () {
+            var knid = $(this).data('id');
+            window.location.href = 'adminEditKnowledge.html?knid=' + knid; // 跳转到编辑词条页面，并传递词条ID
+        });
+
+        function updateCategoryCount(ancestorId = '') {
+            var url = '/knowledges/count_all_knowledge/';
+
+            if (ancestorId) {
+                url = '/knowledges/count_knowledge/' + ancestorId;
+            }
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function (json) {
+                    if (json.state === 200) {
+                        $('#categoryCount').text('词条数量: ' + json.data);
+                    } else {
+                        alert('获取词条数量失败: ' + json.message);
+                    }
+                },
+                error: function () {
+                    alert('获取词条数量失败，服务器错误');
+                }
+            });
+        }
+
+        function setupPagination(ancestorId='') {
+            var url = '/knowledges/count_all_knowledge/';
+            if (ancestorId) {
+                url = '/knowledges/count_knowledge/' + ancestorId;
+            }
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function (json) {
+                    if (json.state === 200) {
+                        var totalCount = json.data;
+                        totalPages = Math.ceil(totalCount / pageSize);
+                        var $pagination = $('#pagination .pagination');
+                        $pagination.empty();  // 确保分页按钮不重复生成
+
+                        // 上一页按钮
+                        if (currentPage > 1) {
+                            $pagination.append('<li><a href="#" data-page="' + (currentPage - 1) + '">&laquo; 上一页</a></li>');
+                        }
+
+                        // 页码按钮
+                        for (var i = 1; i <= totalPages; i++) {
+                            var activeClass = (i === currentPage) ? ' class="active"' : '';
+                            $pagination.append('<li' + activeClass + '><a href="#" data-page="' + i + '">' + i + '</a></li>');
+                        }
+
+                        // 下一页按钮
+                        if (currentPage < totalPages) {
+                            $pagination.append('<li><a href="#" data-page="' + (currentPage + 1) + '">下一页 &raquo;</a></li>');
+                        }
+                    } else {
+                        alert('获取总数失败: ' + json.message);
+                    }
+                },
+                error: function () {
+                    alert('获取总数失败，服务器错误');
+                }
+            });
+        }
+    });
+</script>
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+
+</html>

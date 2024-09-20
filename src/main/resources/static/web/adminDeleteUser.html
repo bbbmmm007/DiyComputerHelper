@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit" />
+    <title>管理用户 - 电脑DIY小助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="../css/layout.css" />
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <script src="../bootstrap3/js/bootstrap.js"></script>
+</head>
+
+<body>
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手管理员页面--管理删除用户</b>
+        <button type="button" class="btn btn-info" id="backBtn">返回</button>
+        <button type="button" class="btn btn-info" id="homeBtn">回到主页</button>
+    </span>
+</header>
+
+<div class="container mycontent">
+    <h2>用户管理
+        <button id="viewDistributionBtn" class="btn btn-primary pull-right">查看用户分布情况</button>
+    </h2>
+
+    <!-- 隐藏的用户分布表格 -->
+    <div id="userDistributionSection" style="display: none;">
+        <h2>用户分布情况</h2>
+
+        <!-- 排序下拉框 -->
+        <label for="sortOrder">排序方式：</label>
+        <select id="sortOrder" class="form-control" style="width: 200px; display: inline-block;">
+            <option value="asc">按人数递增</option>
+            <option value="desc">按人数递减</option>
+        </select>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>年龄范围</th>
+                    <th>性别</th>
+                    <th>用户数量</th>
+                </tr>
+                </thead>
+                <tbody id="distributionList">
+                <!-- 用户分布情况由JavaScript动态填充 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>用户ID</th>
+                <th>用户名</th>
+                <th>年龄</th>
+                <th>性别</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody id="userList">
+            <!-- 用户列表由JavaScript动态填充 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<script src="../js/AdminButton.js"></script>
+<script>
+    $(document).ready(function () {
+        loadUsers();
+
+        // 绑定点击事件到“查看用户分布情况”按钮
+        $("#viewDistributionBtn").click(function () {
+            $("#userDistributionSection").slideDown();  // 显示用户分布情况区域
+            $('html, body').animate({ scrollTop: 0 }, 'slow');  // 页面滚动到顶部
+            loadUserDistribution();  // 加载用户分布数据
+        });
+
+        // 监听排序下拉框的变化
+        $("#sortOrder").change(function () {
+            loadUserDistribution();  // 根据选择重新加载数据
+        });
+
+        function loadUsers() {
+            $("#userList").empty();
+            $.ajax({
+                url: "/admin/users",
+                type: "GET",
+                success: function (json) {
+                    if (json.state === 200) {
+                        var list = json.data;
+                        for (var i = 0; i < list.length; i++) {
+                            var gender = getGenderLabel(list[i].gender);
+                            var tr = '<tr id="user-' + list[i].uid + '">\n' +
+                                '<td>' + list[i].uid + '</td>\n' +
+                                '<td>' + list[i].username + '</td>\n' +
+                                '<td>' + list[i].age + '</td>\n' +
+                                '<td>' + gender + '</td>\n' +
+                                '<td><button onclick="deleteUser(' + list[i].uid + ')" class="btn btn-danger">删除</button></td>\n' +
+                                '</tr>';
+                            $("#userList").append(tr);
+                        }
+                    } else {
+                        alert("用户数据加载失败：" + json.message);
+                    }
+                },
+                error: function () {
+                    alert("加载用户列表失败，服务器错误。");
+                }
+            });
+        }
+
+        window.deleteUser = function (uid) {
+            if (confirm("确认要删除这个用户吗？")) {
+                $.ajax({
+                    url: '/admin/delete_user/' + uid,
+                    type: 'POST',
+                    success: function (json) {
+                        if (json.state === 200) {
+                            alert('用户删除成功');
+                            loadUsers();
+                        } else {
+                            alert('删除失败: ' + json.message);
+                        }
+                    },
+                    error: function () {
+                        alert('删除失败，服务器错误');
+                    }
+                });
+            }
+        };
+
+        function loadUserDistribution() {
+            $("#distributionList").empty();  // 清空旧数据
+            $.ajax({
+                url: "/admin/user_distribution",
+                type: "GET",
+                success: function (json) {
+                    if (json.state === 200) {
+                        var list = json.data;
+
+                        // 获取排序顺序
+                        var sortOrder = $("#sortOrder").val();
+                        if (sortOrder === "asc") {
+                            list.sort(function (a, b) { return a.count - b.count; });
+                        } else {
+                            list.sort(function (a, b) { return b.count - a.count; });
+                        }
+
+                        // 根据排序后的数据重新渲染表格
+                        for (var i = 0; i < list.length; i++) {
+                            var gender = getGenderLabel(list[i].gender);
+                            var tr = '<tr>' +
+                                '<td>' + list[i].ageRange + '</td>' +
+                                '<td>' + gender + '</td>' +
+                                '<td>' + list[i].count + '</td>' +
+                                '</tr>';
+                            $("#distributionList").append(tr);
+                        }
+                    } else {
+                        alert("无法获取用户分布情况：" + json.message);
+                    }
+                },
+                error: function () {
+                    alert("获取用户分布情况失败，服务器错误。");
+                }
+            });
+        }
+
+        function getGenderLabel(gender) {
+            // 确保性别数据正确解析，避免任何错误
+            switch (parseInt(gender)) {
+                case 1:
+                    return '男';
+                case 0:
+                    return '女';
+                default:
+                    return '未知';  // 如果出现异常性别数据，返回“未知”
+            }
+        }
+    });
+</script>
+
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+
+</html>

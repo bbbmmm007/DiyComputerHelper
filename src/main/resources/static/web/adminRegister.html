@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit" />
+    <title>管理员注册 - 电脑DIY小助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet" type="text/css">
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <script src="../bootstrap3/js/bootstrap.js"></script>
+    <link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css" />
+    <link rel="stylesheet" type="text/css" href="../css/top.css" />
+    <link rel="stylesheet" type="text/css" href="../css/index.css" />
+    <link rel="stylesheet" type="text/css" href="../css/layout.css" />
+    <link rel="stylesheet" type="text/css" href="../css/login.css" />
+    <link rel="stylesheet" type="text/css" href="../css/footer.css" />
+</head>
+<body>
+<!--头部-->
+<header class="header">
+    <span class="pull-right"><small>欢迎访问</small><b>管理员后台页面--注册管理员</b></span>
+</header>
+<!--主体-->
+<div class="container mycontent text-left">
+    <!--透明层 -->
+    <div class="loginDiv">
+        <p>管理员注册</p>
+        <!--表单开始-->
+        <form id="admin-register-form" class="form-horizontal" role="form">
+            <!--用户名-->
+            <div class="form-group">
+                <label for="adminName" class="col-md-3 control-label">管理员名：</label>
+                <div class="col-md-8">
+                    <input name="adminName" type="text" class="form-control" id="adminName" placeholder="请输入管理员名">
+                </div>
+            </div>
+            <!--密码-->
+            <div class="form-group">
+                <label for="password" class="col-md-3 control-label"> 密码：</label>
+                <div class="col-md-8">
+                    <input name="password" type="text" class="form-control" id="password" placeholder="请输入密码">
+                </div>
+            </div>
+            <!--确认密码-->
+            <div class="form-group">
+                <label class="col-md-3 control-label"> 确认密码：</label>
+                <div class="col-md-8">
+                    <input type="text" class="form-control" placeholder="请再次输入密码">
+                </div>
+            </div>
+            <!--提交按钮-->
+            <div class="form-group">
+                <label class="col-md-3 control-label"></label>
+                <div class="col-md-8">
+                    <input id="btn-admin-register" class="btn btn-primary" type="button" value="注册" />
+                    <span class="pull-right"><small>已有账号？</small><a href="adminLogin.html">登录</a></span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<!--页脚-->
+<footer class="footer">
+    <!-- 底部内容 -->
+    <div class="container beforeBottom">
+        <div class="col-md-offset-1 col-md-3">
+            <div><img src="../images/index/stumalllogo.svg" alt="" class="footLogo" /></div>
+            <div><img src="../images/index/footerFont.png" alt="" /></div>
+        </div>
+        <div class="col-md-4 callus text-center">
+            <div class="col-md-4">
+                <ul>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12 text-center bottom">
+    </div>
+</footer>
+
+<script>
+    $("#btn-admin-register").click(function () {
+        $.ajax({
+            url: "/admin/register",
+            type: "POST",
+            data: $("#admin-register-form").serialize(),
+            dataType: "JSON",
+            success: function (json) {
+                if (json.state == 200) {
+                    alert("注册管理员成功");
+                    location.href = "adminLogin.html";
+                } else {
+                    alert("注册失败：" + json.message);
+                }
+            },
+            error: function (xhr) {
+                alert("注册时发生错误：" + xhr.responseText);
+            }
+        });
+    });
+</script>
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+</html>

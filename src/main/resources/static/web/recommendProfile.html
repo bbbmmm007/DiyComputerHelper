@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配置清单</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: #333;
+        }
+        select {
+            margin: 20px auto;
+            padding: 10px;
+            display: block;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 50%;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        select:hover {
+            border-color: #007bff;
+        }
+        #config-container {
+            margin-top: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .config-item {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+        }
+        .config-item h2 {
+            margin-top: 0;
+            font-size: 24px;
+            color: #007bff;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        ul li {
+            margin: 10px 0;
+            font-size: 18px;
+            color: #333;
+        }
+        ul li strong {
+            color: #007bff;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .button-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: background-color 0.3s;
+        }
+        .button-container button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<h1>最具性价比的配置清单</h1>
+
+
+<div id="config-container"></div>
+
+<div class="button-container">
+    <button onclick="window.location.href='autoCreateProfileBySelect.html'">高度定制自动生成配置</button>
+    <button onclick="window.location.href='autoCreateProfile.html'">AI生成配置</button>
+</div>
+
+<script>
+
+</script>
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+</html>

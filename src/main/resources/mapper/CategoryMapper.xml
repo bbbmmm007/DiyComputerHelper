@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhny.computer.mapper.CategoryMapper">
+
+    <resultMap id="CategoryMap" type="com.zhny.computer.entity.Category">
+    <id column="caid" property="caid"></id>
+    <result column="ancestor_id" property="ancestorId"></result>
+    <result column="ancestor_name" property="ancestorName"></result>
+    <result column="parent_id" property="parentId"></result>
+    <result column="parent_name" property="parentName"></result>
+    <result column="child_id" property="childId"></result>
+    <result column="child_name" property="childName"></result>
+</resultMap>
+    <!--通过分类号获取到其所有的父分类-->
+    <select id="findChildNameByChid" resultMap="CategoryMap">
+        select distinct(child_name) from category where ancestor_id=#{ancestorId}
+    </select>
+
+   <!--//通过分类号获取到其所有的父分类-->
+    <select id="findParentNameByChid" resultMap="CategoryMap">
+        select distinct(parent_name) from category where ancestor_id=#{ancestorId}
+    </select>
+
+    <!--//根据子分类id获取祖分类名称-->
+    <select id="findAncestorNameByChid" resultType="java.lang.String">
+        select ancestor_name from category where child_id=#{childId}
+    </select>
+
+
+</mapper>

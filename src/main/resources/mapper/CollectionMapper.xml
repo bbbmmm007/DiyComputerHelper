@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--namespace用于指定当前的映射文件和哪个接口进行映射,需要指定接口的文件路径,路径需要是包的完整路径结构-->
+<mapper namespace="com.zhny.computer.mapper.CollectionMapper">
+    <resultMap id="CollectionMap" type="com.zhny.computer.entity.Collection">
+        <id column="coid" property="coid"></id>
+        <result column="created_time" property="createdTime"></result>
+        <result column="child_id" property="childId"></result>
+        <result column="item_type" property="itemType"></result>
+    </resultMap>
+
+    <!--添加收藏-->
+    <insert id="addCollection" useGeneratedKeys="true" keyProperty="coid">
+        insert into user_collection_t(uid,id,child_id,item_type,price,image,created_time) VALUES (#{uid},#{id},#{childId},#{itemType},#{price},#{image},#{createdTime})
+    </insert>
+
+    <!--移除收藏-->
+    <delete id="deleteCollection">
+        delete from user_collection_t where id=#{id} and uid=#{uid}
+    </delete>
+
+    <!--展示收藏列表-->
+    <select id="showCollection" resultMap="CollectionMap">
+        select id,child_id,price,item_type,image from user_collection_t  where uid=#{uid}
+    </select>
+
+    <!--一键清空收藏列表-->
+    <delete id="clearCollection">
+        delete from user_collection_t where uid=#{uid}
+    </delete>
+
+    <!--查看商品是否重复被加进收藏列表-->
+    <select id="checkCollection" resultType="integer">
+        select count(*) from user_collection_t where id=#{id} and uid=#{uid}
+    </select>
+</mapper>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit" />
+    <title>用户主页 - 电脑DIY小助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--导入核心文件-->
+    <script src="../bootstrap3/js/holder.js"></script>
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet" type="text/css">
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <script src="../bootstrap3/js/bootstrap.js"></script>
+    <!-- 字体图标 -->
+    <link rel="stylesheet" href="/bootstrap3/font-awesome-4.7.0/css/font-awesome.css" />
+    <link rel="stylesheet" type="text/css" href="/css/top.css" />
+    <link rel="stylesheet" type="text/css" href="/css/index.css" />
+    <link rel="stylesheet" type="text/css" href="/css/layout.css" />
+    <link rel="stylesheet" type="text/css" href="/css/footer.css" />
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+
+        .panel {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .panel:hover {
+            transform: scale(1.05);
+        }
+
+        .panel .panel-body {
+            padding: 40px 0;
+        }
+
+        .panel .panel-body i {
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .panel-primary .panel-body {
+            background-color: #337ab7;
+        }
+
+        .panel-success .panel-body {
+            background-color: #5cb85c;
+        }
+
+        .panel-info .panel-body {
+            background-color: #5bc0de;
+        }
+
+        .panel-danger .panel-body {
+            background-color: #d9534f;
+        }
+
+        .panel-heading {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        footer {
+            margin-top: 50px;
+        }
+
+        /* 新增的样式用于定位退出按钮 */
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+
+<body>
+<!--头部-->
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手</b>
+        <button type="button" id="collectionBtn" class="btn btn-info header-btn">我的收藏</button>
+        <button type="button" id="cartBtn" class="btn btn-info header-btn">查看配置车</button>
+        <button type="button" class="btn btn-info" id="logoutBtn">退出登录</button>
+    </span>
+</header>
+
+<!--主体-->
+<div class="container mycontent">
+    <h2 class="text-center">请选择您感兴趣的板块</h2>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-primary text-center" id="chooseConfig">
+                <div class="panel-heading">挑选配置</div>
+                <div class="panel-body">
+                    <i class="fa fa-cogs fa-4x"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-success text-center" id="recommendConfig">
+                <div class="panel-heading">推荐配置</div>
+                <div class="panel-body">
+                    <i class="fa fa-thumbs-up fa-4x"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-info text-center" id="knowledge">
+                <div class="panel-heading">知识科普</div>
+                <div class="panel-body">
+                    <i class="fa fa-book fa-4x"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-info text-center" id="AI">
+                <div class="panel-heading">AI问答</div>
+                <div class="panel-body">
+                    <i class="fa fa-book fa-4x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 20px;">
+        <div class="col-md-3">
+            <div class="panel panel-danger text-center" id="manageProfile">
+                <div class="panel-heading">管理个人信息</div>
+                <div class="panel-body">
+                    <i class="fa fa-user fa-4x"></i>
+                </div>
+            </div>
+        </div>
+        <!-- 如果有更多模块，可以继续添加到此行 -->
+    </div>
+</div>
+
+<!-- JavaScript 逻辑 -->
+<script>
+    $(document).ready(function () {
+        // 跳转到挑选配置页面
+        $('#chooseConfig').click(function () {
+            window.location.href = "product.html";
+        });
+
+        // 跳转到推荐配置页面
+        $('#recommendConfig').click(function () {
+            window.location.href = "recommendProfile.html"; // 目前没有具体页面，先占位
+        });
+
+        // 跳转到知识科普页面
+        $('#knowledge').click(function () {
+            window.location.href = "knowledge.html"; // 跳转到知识科普页面
+        });
+
+        // 跳转到AI问答页面
+        $('#AI').click(function () {
+            window.location.href = "AI.html"; // 跳转到AI问答页面
+        });
+
+        // 跳转到管理个人信息页面
+        $('#manageProfile').click(function () {
+            window.location.href = "userProfile.html"; // 跳转到管理个人信息页面
+        });
+
+        // 退出登录按钮点击事件
+        $('#logoutBtn').click(function () {
+            // 这里可以添加清除会话或 token 的逻辑
+            window.location.href = "login.html"; // 跳转到登录页面
+        });
+
+
+    });
+</script>
+
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+
+</html>

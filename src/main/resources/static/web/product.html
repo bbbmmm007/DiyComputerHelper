@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="renderer" content="webkit" />
+	<title>配置挑选 - 电脑DIY小助手</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+	<link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css">
+	<link rel="stylesheet" type="text/css" href="../css/layout.css" />
+	<style>
+		/* CSS 样式 */
+		.category-filter {
+			margin-bottom: 20px;
+		}
+
+		.pagination {
+			margin: 20px 0;
+		}
+
+		.editable {
+			cursor: pointer;
+		}
+
+		.editable:hover {
+			background-color: #f5f5f5;
+		}
+
+		.category-count {
+			font-weight: bold;
+			margin-left: 10px;
+		}
+	</style>
+</head>
+
+<body>
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手</b>
+		<!-- 按钮组 -->
+        <button type="button" class="btn btn-secondary" id="backBtn">返回</button>
+        <button type="button" class="btn btn-info" id="homeBtn">回到主页</button>
+    </span>
+</header>
+
+<div class="container mycontent">
+	<h2>商品列表</h2>
+
+	<!-- 分类筛选和新增商品按钮 -->
+	<div class="category-filter">
+		<select id="categorySelect1" class="form-control" style="display: inline-block; width: auto;">
+			<option value="">选择祖分类</option>
+		</select>
+		<select id="categorySelect2" class="form-control" style="display: inline-block; width: auto;" disabled>
+			<option value="">选择父分类</option>
+		</select>
+		<select id="categorySelect3" class="form-control" style="display: inline-block; width: auto;" disabled>
+			<option value="">选择子分类</option>
+		</select>
+		<span id="categoryCount" class="category-count">商品数量: 0</span>
+
+		<button id="searchBtn" class="btn btn-primary header-btn">搜索商品</button>
+
+	</div>
+
+	<!-- 商品列表表格 -->
+	<div class="table-responsive">
+		<table class="table table-bordered">
+			<thead>
+			<tr>
+				<th>商品ID</th>
+				<th>商品子分类号</th>
+				<th>商品父分类号</th>
+				<th>商品祖分类号</th>
+				<th>商品名称</th>
+				<th>商品价格</th>
+				<th>商品图片</th>
+				<th>操作</th>
+			</tr>
+			</thead>
+			<tbody id="productList">
+			<!-- 商品列表由JavaScript动态填充 -->
+			</tbody>
+		</table>
+	</div>
+
+	<!-- 分页控件 -->
+	<div id="pagination" class="text-center">
+		<ul class="pagination">
+			<!-- 分页按钮由JavaScript动态填充 -->
+		</ul>
+	</div>
+</div>
+
+<!-- 引入外部 JavaScript 文件 -->
+<script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+<script src="../bootstrap3/js/bootstrap.js"></script>
+<script src="../js/categories.js"></script>
+<script src="../js/categoriesSelect.js"></script>
+
+<script>
+	$(document).ready(function () {
+		var pageSize = 15; // 每页显示的商品数量
+		var totalPages = 1; // 总页数，初始为1
+		var currentPage = localStorage.getItem('currentPage') ? parseInt(localStorage.getItem('currentPage')) : 1;
+		var selectedAncestorId = localStorage.getItem('selectedAncestorId') || '';
+		var selectedParentId = localStorage.getItem('selectedParentId') || '';
+		var selectedChildId = localStorage.getItem('selectedChildId') || '';
+
+		// 状态管理
+		var collectionIds = new Set(JSON.parse(localStorage.getItem('collectionIds')) || []); // 从 localStorage 恢复收藏状态
+		var cartIds = new Set(JSON.parse(localStorage.getItem('cartIds')) || []); // 从 localStorage 恢复购物车状态
+
+		initialize(); // 初始化
+
+		function initialize() {
+			populateCategorySelect1(); // 填充第一级分类
+			setupEventListeners(); // 设置事件监听
+			loadProducts(currentPage, selectedAncestorId, selectedParentId, selectedChildId); // 加载商品
+			updateCategoryCount(selectedAncestorId, selectedParentId, selectedChildId); // 初始化时更新商品数量
+			restoreCategorySelection(); // 恢复分类选择状态
+			updateButtons(); // 更新按钮状态
+		}
+
+		function setupEventListeners() {
+			$('#categorySelect1').change(function () {
+				var ancestorId = $(this).val();
+				selectedAncestorId = ancestorId;
+				updateCategorySelect2(ancestorId);
+				updateCategoryCount(ancestorId); // 更新分类下的商品数量
+				currentPage = 1; // 切换分类时重置页码
+				saveState(); // 保存当前状态到 localStorage
+				loadProducts(currentPage, ancestorId); // 加载商品
+			});
+
+			$('#categorySelect2').change(function () {
+				var ancestorId = $('#categorySelect1').val();
+				var parentId = $(this).val();
+				selectedParentId = parentId;
+				updateCategorySelect3(ancestorId, parentId);
+				updateCategoryCount(ancestorId, parentId); // 更新分类下的商品数量
+				currentPage = 1; // 切换分类时重置页码
+				saveState(); // 保存当前状态到 localStorage
+				loadProducts(currentPage, ancestorId, parentId); // 加载商品
+			});
+
+			$('#categorySelect3').change(function () {
+				var ancestorId = $('#categorySelect1').val();
+				var parentId = $('#categorySelect2').val();
+				var childId = $(this).val();
+				selectedChildId = childId;
+				updateCategoryCount(ancestorId, parentId, childId); // 更新分类下的商品数量
+				currentPage = 1; // 切换分类时重置页码
+				saveState(); // 保存当前状态到 localStorage
+				loadProducts(currentPage, ancestorId, parentId, childId); // 加载商品
+			});
+
+			$('#searchBtn').click(function () {
+				window.location.href = "searchProduct.html";
+			});
+
+			$(document).on('click', '.pagination a', function (event) {
+				event.preventDefault();
+				var page = $(this).data('page');
+				if (page >= 1 && page <= totalPages) {
+					currentPage = page;
+					saveState(); // 保存当前页码到 localStorage
+					loadProducts(currentPage, $('#categorySelect1').val(), $('#categorySelect2').val(), $('#categorySelect3').val());
+				}
+			});
+		}
+
+		// 加入收藏
+		window.addToCollection = function (productId) {
+			$.ajax({
+				url: '/collections/add_collection',
+				type: 'POST',
+				data: { id: productId },
+				success: function (json) {
+					if (json.state === 200) {
+						alert('商品已加入收藏');
+						collectionIds.add(productId); // 更新收藏状态
+						localStorage.setItem('collectionIds', JSON.stringify(Array.from(collectionIds))); // 保存到 localStorage
+						updateProductRow(productId); // 更新商品行
+					} else {
+						alert('加入收藏失败: ' + json.message);
+					}
+				},
+				error: function () {
+					alert('加入收藏失败，服务器错误');
+				}
+			});
+		};
+
+		// 加入购物车
+		window.addToCart = function (productId) {
+			$.ajax({
+				url: '/carts/add_carts',
+				type: 'POST',
+				data: { id: productId },
+				success: function (json) {
+					if (json.state === 200) {
+						alert('商品已加入购物车');
+						cartIds.add(productId); // 更新购物车状态
+						localStorage.setItem('cartIds', JSON.stringify(Array.from(cartIds))); // 保存到 localStorage
+						updateProductRow(productId); // 更新商品行
+					} else {
+						alert('加入购物车失败: ' + json.message);
+					}
+				},
+				error: function () {
+					alert('加入购物车失败，服务器错误');
+				}
+			});
+		};
+
+		// 更新商品行的按钮状态
+		function updateProductRow(productId) {
+			var $productRow = $('#product-' + productId); // 确保选择器正确
+			if ($productRow.length > 0) {
+				// 更新收藏按钮
+				if (collectionIds.has(productId)) {
+					$productRow.find('.collection-button')
+							.text('已加入收藏')
+							.attr('disabled', true); // 禁用按钮
+				}
+				// 更新购物车按钮
+				if (cartIds.has(productId)) {
+					$productRow.find('.cart-button')
+							.text('已加入购物车')
+							.attr('disabled', true); // 禁用按钮
+				}
+			}
+		}
+
+		// 更新所有商品按钮状态
+		function updateButtons() {
+			$('#productList tr').each(function () {
+				var productId = $(this).attr('id').split('-')[1]; // 获取产品 ID
+				updateProductRow(productId); // 更新每个产品行的按钮状态
+			});
+		}
+
+		// 加载商品
+		function loadProducts(pageNumber, ancestorId = '', parentId = '', childId = '') {
+			var url = '/products/show_productsALLF/' + pageNumber + '/' + pageSize;
+
+			if (childId) {
+				url = '/products/show_ch_productsCF/' + childId + '/' + pageNumber + '/' + pageSize;
+			} else if (parentId) {
+				url = '/products/show_pa_productsPF/' + parentId + '/' + pageNumber + '/' + pageSize;
+			} else if (ancestorId) {
+				url = '/products/show_an_productsAF/' + ancestorId + '/' + pageNumber + '/' + pageSize;
+			}
+
+			$.ajax({
+				url: url,
+				type: 'GET',
+				success: function (json) {
+					if (json.state === 200) {
+						var products = json.data;
+						var $productList = $('#productList');
+						$productList.empty(); // 清空当前列表
+
+						if (products.length === 0) {
+							$productList.append('<tr><td colspan="8">没有商品</td></tr>');
+							return;
+						}
+
+						$.each(products, function (index, product) {
+							var collectionButtonText = collectionIds.has(product.id) ? '已加入收藏' : '加入收藏';
+							var cartButtonText = cartIds.has(product.id) ? '已加入购物车' : '加入购物车';
+
+							var productRow = '<tr id="product-' + product.id + '">' +
+									'<td>' + product.id + '</td>' +
+									'<td>' + product.childId + '</td>' +
+									'<td>' + product.parentId + '</td>' +
+									'<td>' + product.ancestorId + '</td>' +
+									'<td>' + product.itemType + '</td>' +
+									'<td>' + product.price + '</td>' +
+									'<td><img src="' + product.image + '" alt="商品图片" style="width: 100px; height: auto;"></td>' +
+									'<td>' +
+									'<button class="btn btn-warning collection-button" onclick="addToCollection(' + product.id + ')">' + collectionButtonText + '</button>' +
+									' <button class="btn btn-danger cart-button" onclick="addToCart(' + product.id + ')">' + cartButtonText + '</button>' +
+									'</td>' +
+									'</tr>';
+							$productList.append(productRow);
+						});
+
+						setupPagination(); // 调用分页设置函数
+					} else {
+						alert('加载商品失败: ' + json.message);
+					}
+				},
+				error: function () {
+					alert('加载商品失败，服务器错误');
+				}
+			});
+		}
+
+		// 设置分页
+		function setupPagination() {
+			var url = '/products/count_productAll';
+
+			var ancestorId = $('#categorySelect1').val();
+			var parentId = $('#categorySelect2').val();
+			var childId = $('#categorySelect3').val();
+
+			if (childId) {
+				url = '/products/count_productCh/' + childId;
+			} else if (parentId) {
+				url = '/products/count_productPa/' + parentId;
+			} else if (ancestorId) {
+				url = '/products/count_productAn/' + ancestorId;
+			}
+
+			$.ajax({
+				url: url,
+				type: 'GET',
+				success: function (json) {
+					if (json.state === 200) {
+						var totalCount = json.data;
+						totalPages = Math.ceil(totalCount / pageSize);
+						var $pagination = $('#pagination .pagination');
+						$pagination.empty();
+
+						// Previous page button
+						if (currentPage > 1) {
+							$pagination.append('<li><a href="#" data-page="' + (currentPage - 1) + '">&laquo; 上一页</a></li>');
+						}
+
+						// Page number buttons
+						for (var i = 1; i <= totalPages; i++) {
+							var activeClass = (i === currentPage) ? ' class="active"' : '';
+							$pagination.append('<li' + activeClass + '><a href="#" data-page="' + i + '">' + i + '</a></li>');
+						}
+
+						// Next page button
+						if (currentPage < totalPages) {
+							$pagination.append('<li><a href="#" data-page="' + (currentPage + 1) + '">下一页 &raquo;</a></li>');
+						}
+					} else {
+						alert('获取总数失败: ' + json.message);
+					}
+				},
+				error: function () {
+					alert('获取总数失败，服务器错误');
+				}
+			});
+		}
+
+		// 更新分类下的商品数量
+		function updateCategoryCount(ancestorId = '', parentId = '', childId = '') {
+			var url = '/products/count_productAll';
+
+			if (childId) {
+				url = '/products/count_productCh/' + childId;
+			} else if (parentId) {
+				url = '/products/count_productPa/' + parentId;
+			} else if (ancestorId) {
+				url = '/products/count_productAn/' + ancestorId;
+			}
+
+			$.ajax({
+				url: url,
+				type: 'GET',
+				success: function (json) {
+					if (json.state === 200) {
+						$('#categoryCount').text('商品数量: ' + json.data);
+					} else {
+						alert('获取商品数量失败: ' + json.message);
+					}
+				},
+				error: function () {
+					alert('获取商品数量失败，服务器错误');
+				}
+			});
+		}
+
+		// 保存当前页面状态到 localStorage
+		function saveState() {
+			localStorage.setItem('currentPage', currentPage);
+			localStorage.setItem('selectedAncestorId', selectedAncestorId);
+			localStorage.setItem('selectedParentId', selectedParentId);
+			localStorage.setItem('selectedChildId', selectedChildId);
+		}
+
+		// 恢复分类选择状态
+		function restoreCategorySelection() {
+			if (selectedAncestorId) {
+				$('#categorySelect1').val(selectedAncestorId).trigger('change');
+			}
+			if (selectedParentId) {
+				$('#categorySelect2').val(selectedParentId).trigger('change');
+			}
+			if (selectedChildId) {
+				$('#categorySelect3').val(selectedChildId).trigger('change');
+			}
+		}
+	});
+</script>
+<footer class="footer">
+	<div class="text-center rights container">
+		<p>作者声明数据只供娱乐</p>
+	</div>
+</footer>
+</body>
+</html>

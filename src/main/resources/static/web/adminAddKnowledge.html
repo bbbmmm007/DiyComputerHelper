@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit" />
+    <title>新增词条 - DIY小助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../bootstrap3/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="../bootstrap3/font-awesome-4.7.0/css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="../css/layout.css" />
+    <script src="../bootstrap3/jquery-1.9.1.min.js"></script>
+    <script src="../bootstrap3/js/bootstrap.js"></script>
+    <style>
+        .container {
+            margin-top: 50px;
+            max-width: 600px;
+        }
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <span class="pull-right">
+        <small>欢迎访问</small><b>电脑DIY小助手管理员页面--增加词条</b>
+        <button type="button" class="btn btn-info" id="backBtn">返回</button>
+        <button type="button" class="btn btn-info" id="homeBtn">回到主页</button>
+    </span>
+</header>
+<div class="container">
+    <h2 class="text-center">新增词条</h2>
+    <form id="addKnowledgeForm">
+        <div class="form-group">
+            <label for="ancestorSelect">选择分类</label>
+            <select class="form-control" id="ancestorSelect" required>
+                <option value="">请选择分类</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="topic">词条主题</label>
+            <input type="text" class="form-control" id="topic" placeholder="请输入词条主题" required>
+        </div>
+        <div class="form-group">
+            <label for="content">词条内容</label>
+            <textarea class="form-control" id="content" placeholder="请输入词条内容" rows="6" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">新增词条</button>
+    </form>
+</div>
+
+<script src="../js/knowledgeClass.js"></script>
+<script src="../js/AdminButton.js"></script>
+<script>
+    $(document).ready(function () {
+        // 填充分类选择框
+        for (var key in categories) {
+            $('#ancestorSelect').append('<option value="' + categories[key].id + '">' + categories[key].name + '</option>');
+        }
+
+// 提交表单事件
+        $('#addKnowledgeForm').on('submit', function (e) {
+            e.preventDefault();
+            var ancestorId = $('#ancestorSelect').val();
+            var topic = $('#topic').val();
+            var content = $('#content').val();
+
+            // 获取 ancestorName
+            var ancestorName = categories[Object.keys(categories).find(key => categories[key].id === ancestorId)].name;
+
+            if (!ancestorId || !topic || !content) {
+                alert("请填写所有必填项！");
+                return;
+            }
+
+            $.ajax({
+                url: '/knowledges/add_knowledge',
+                type: 'POST',
+                data: ({
+                    ancestorId: ancestorId,
+                    ancestorName: ancestorName,  // 新增 ancestorName 传递
+                    topic: topic,
+                    content: content
+                }),
+                success: function (json) {
+                    if (json.state === 200) {
+                        alert('词条新增成功');
+                        // 刷新页面或跳转到其他页面
+                    } else {
+                        alert('词条新增失败: ' + json.message);
+                    }
+                },
+                error: function () {
+                    alert('词条新增失败，服务器错误。');
+                }
+            });
+        });
+    });
+</script>
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+
+</html>

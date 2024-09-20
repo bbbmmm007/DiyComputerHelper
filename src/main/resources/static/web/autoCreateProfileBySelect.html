@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>私人定制化配置生成</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-container, .result-container {
+            width: 48%;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        label {
+            display: inline-block;
+            width: 35%;
+            font-weight: bold;
+            margin-right: 10px;
+            color: #555;
+        }
+
+        select, input {
+            width: 60%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            transition: border-color 0.3s ease;
+        }
+
+        select:hover, input:hover {
+            border-color: #007bff;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .result-container {
+            background-color: #eaf2f8;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #loading {
+            display: none;
+            font-size: 16px;
+            color: #007bff;
+            text-align: center;
+        }
+
+        .form-container, .result-container {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 左侧表单 -->
+    <div class="form-container">
+        <h1>PC 配置生成器</h1>
+        <form id="configForm">
+            <!-- CPU类型选择 -->
+            <div class="form-group">
+                <label for="cpuType">CPU 类型:</label>
+                <select id="cpuType" name="cpuType" onchange="updateMotherboardAndMemory()" required>
+                    <option value="">请选择 CPU 类型</option>
+                    <option value="IntelD4">Intel D4</option>
+                    <option value="AmdD5">AMD D5</option>
+                    <option value="IntelD4D5">Intel D4/D5</option>
+                    <option value="AmdD4">AMD D4</option>
+                </select>
+            </div>
+
+            <!-- 主板类型选择 -->
+            <div class="form-group">
+                <label for="motherboardType">主板类型:</label>
+                <select id="motherboardType" name="motherboardType" required>
+                    <option value="">请选择主板类型</option>
+                </select>
+            </div>
+
+            <!-- 主板版本选择 -->
+            <div class="form-group">
+                <label for="motherboardVersion">主板版本:</label>
+                <select id="motherboardVersion" name="motherboardVersion" required>
+                    <option value="">请选择主板版本</option>
+                </select>
+            </div>
+
+            <!-- 主板型号选择 -->
+            <div class="form-group">
+                <label for="motherboardModel">主板型号:</label>
+                <select id="motherboardModel" name="motherboardModel" onchange="updateMemoryOptions()" required>
+                    <option value="">请选择主板型号</option>
+                </select>
+            </div>
+
+            <!-- 内存类型选择 -->
+            <div class="form-group">
+                <label for="memoryType">内存类型:</label>
+                <select id="memoryType" name="memoryType" onchange="updateMemoryModel()" required>
+                    <option value="">请选择内存类型</option>
+                </select>
+            </div>
+
+            <!-- 内存大小选择 -->
+            <div class="form-group">
+                <label for="memorySize">内存大小:</label>
+                <select id="memorySize" name="memorySize" required>
+                    <option value="">请选择内存大小</option>
+                </select>
+            </div>
+
+            <!-- 内存颗粒类型选择 -->
+            <div class="form-group">
+                <label for="memoryModel">内存颗粒:</label>
+                <select id="memoryModel" name="memoryModel" required>
+                    <option value="">请选择内存颗粒</option>
+                </select>
+            </div>
+
+            <!-- 显卡类型选择 -->
+            <div class="form-group">
+                <label for="gpuType">显卡类型:</label>
+                <select id="gpuType" name="gpuType" onchange="updateGpuModel()" required>
+                    <option value="">请选择显卡类型</option>
+                    <option value="21">N卡</option>
+                    <option value="22">A卡</option>
+                </select>
+            </div>
+
+            <!-- 显卡型号选择 -->
+            <div class="form-group">
+                <label for="gpuModel">显卡型号:</label>
+                <select id="gpuModel" name="gpuModel" onchange="updateGpuSize()" required>
+                    <option value="">请选择显卡型号</option>
+                </select>
+            </div>
+
+            <!-- 显存大小选择 -->
+            <div class="form-group">
+                <label for="gpuSize">显存大小:</label>
+                <select id="gpuSize" name="gpuSize" required>
+                    <option value="">请选择显存大小</option>
+                </select>
+            </div>
+
+            <!-- 电源类型选择 -->
+            <div class="form-group">
+                <label for="supplyType">电源类型:</label>
+                <select id="supplyType" name="supplyType" required>
+                    <option value="">请选择电源类型</option>
+                    <option value="51">全模组</option>
+                    <option value="52">非全模组</option>
+                </select>
+            </div>
+
+            <!-- 电源型号选择 -->
+            <div class="form-group">
+                <label for="supplyModel">电源型号:</label>
+                <select id="supplyModel" name="supplyModel" required>
+                    <option value="">请选择电源型号</option>
+                </select>
+            </div>
+
+            <!-- 电源功耗选择 -->
+            <div class="form-group">
+                <label for="supplySize">电源功耗W:</label>
+                <select id="supplySize" name="supplySize" required>
+                    <option value="">请选择电源功耗</option>
+                    <option value="400">400W</option>
+                    <option value="550">550W</option>
+                    <option value="650">650W</option>
+                    <option value="750">750W</option>
+                    <option value="850">850W</option>
+                    <option value="1000">1000W</option>
+                    <option value="1200">1200W</option>
+                    <option value="1500">1500W</option>
+                    <option value="2000">2000W</option>
+                </select>
+            </div>
+
+            <!-- SSD类型选择 -->
+            <div class="form-group">
+                <label for="ssdType">固态类型:</label>
+                <select id="ssdType" name="ssdType" required>
+                    <option value="">请选择固态类型</option>
+                    <option value="71">PCIE4.0</option>
+                    <option value="72">PCIE3.0</option>
+                </select>
+            </div>
+
+            <!-- SSD大小选择 -->
+            <div class="form-group">
+                <label for="ssdSize">SSD 容量:</label>
+                <select id="ssdSize" name="ssdSize" required>
+                    <option value="">请选择 SSD 容量</option>
+                    <option value="215">215 GB</option>
+                    <option value="512">512 GB</option>
+                    <option value="1T">1 TB</option>
+                    <option value="2T">2 TB</option>
+                    <option value="4T">4 TB</option>
+                </select>
+            </div>
+
+            <!-- 散热类型选择 -->
+            <div class="form-group">
+                <label for="coolingType">散热类型:</label>
+                <select id="coolingType" name="coolingType" onchange="updateCoolingSize()" required>
+                    <option value="">请选择散热类型</option>
+                    <option value="31">风冷</option>
+                    <option value="32">水冷</option>
+                </select>
+            </div>
+
+            <!-- 散热规格选择 -->
+            <div class="form-group">
+                <label for="coolingSize">散热规格:</label>
+                <select id="coolingSize" name="coolingSize" required>
+                    <option value="">请选择散热型号</option>
+                </select>
+            </div>
+
+            <!-- 机箱类型选择 -->
+            <div class="form-group">
+                <label for="caseType">机箱类型:</label>
+                <select id="caseType" name="caseType" onchange="updateCaseModel()" required>
+                    <option value="">请选择机箱类型</option>
+                    <option value="81">普通机箱</option>
+                    <option value="82">高端定制</option>
+                </select>
+            </div>
+
+            <!-- 机箱型号选择 -->
+            <div class="form-group">
+                <label for="caseModel">机箱型号:</label>
+                <select id="caseModel" name="caseModel" required>
+                    <option value="">请选择机箱型号</option>
+                </select>
+            </div>
+
+            <!-- 用户预算输入 -->
+            <div class="form-group">
+                <label for="totalBudget">总预算:</label>
+                <input type="number" id="totalBudget" name="totalBudget" placeholder="请输入预算 (元)" required>
+            </div>
+
+            <!-- 提交按钮 -->
+            <div class="form-group">
+                <button type="submit">生成配置</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 右侧配置结果 -->
+    <div class="result-container">
+        <div id="loading">
+            <p>正在生成配置，请稍候...</p>
+        </div>
+        <div id="result"></div>
+    </div>
+</div>
+
+<script>
+    // 更新主板和内存类型
+    function updateMotherboardAndMemory() {
+        const cpuType = document.getElementById('cpuType').value;
+        const motherboardType = document.getElementById('motherboardType');
+        const motherboardVersion = document.getElementById('motherboardVersion');
+        const motherboardModel = document.getElementById('motherboardModel');
+        const memoryType = document.getElementById('memoryType');
+        const memorySize = document.getElementById('memorySize');
+
+        // 重置所有下拉框
+        motherboardType.innerHTML = '<option value="">请选择主板类型</option>';
+        motherboardVersion.innerHTML = '<option value="">请选择主板版本</option>';
+        motherboardModel.innerHTML = '<option value="">请选择主板型号</option>';
+        memoryType.innerHTML = '<option value="">请选择内存类型</option>';
+        memorySize.innerHTML = '<option value="">请选择内存大小</option>';
+
+        if (cpuType === 'IntelD4') {
+            motherboardType.innerHTML += '<option value="1">Intel</option>';
+            motherboardVersion.innerHTML += '<option value="41">D4</option>';
+            motherboardModel.innerHTML += '<option value="411">入门级</option><option value="412">中端级</option><option value="413">高端定制</option>';
+            memoryType.innerHTML += '<option value="61">D4</option>';
+            memorySize.innerHTML += '<option value="8">8 GB</option><option value="16">16 GB</option><option value="32">32 GB</option>';
+        } else if (cpuType === 'AmdD5') {
+            motherboardType.innerHTML += '<option value="2">AMD</option>';
+            motherboardVersion.innerHTML += '<option value="42">D5</option>';
+            motherboardModel.innerHTML += '<option value="421">入门级</option><option value="422">中端级</option><option value="423">高端定制</option>';
+            memoryType.innerHTML += '<option value="62">D5</option>';
+            memorySize.innerHTML += '<option value="16">16 GB</option><option value="24">24 GB</option><option value="32">32 GB</option><option value="64">64 GB</option>';
+        }  else if (cpuType === 'AmdD4') {
+            motherboardType.innerHTML += '<option value="2">AMD</option>';
+            motherboardVersion.innerHTML += '<option value="41">D4</option>';
+            motherboardModel.innerHTML += '<option value="411">入门级</option><option value="412">中端级</option><option value="413">高端定制</option>';
+            memoryType.innerHTML += '<option value="61">D4</option>';
+            memorySize.innerHTML += '<option value="8">8 GB</option><option value="16">16 GB</option><option value="32">32 GB</option>';
+        }else if (cpuType === 'IntelD4D5') {
+            // 清空现有的选项
+            motherboardType.innerHTML = '<option value="">请选择主板类型</option>';
+            motherboardVersion.innerHTML = '<option value="">请选择主板版本</option>';
+            motherboardModel.innerHTML = '<option value="">请选择主板型号</option>';
+
+            // 添加主板类型选项
+            motherboardType.innerHTML += '<option value="1">Intel</option>';
+
+            // 添加主板版本选项
+            motherboardVersion.innerHTML += '<option value="41">D4</option>';
+            motherboardVersion.innerHTML += '<option value="42">D5</option>';
+
+            // 更新主板型号选项根据选择的版本
+            motherboardVersion.addEventListener('change', function() {
+                var version = motherboardVersion.value;
+                motherboardModel.innerHTML = '<option value="">请选择主板型号</option>';
+
+                if (version === '41') {
+                    motherboardModel.innerHTML += '<option value="411">入门级</option>';
+                    motherboardModel.innerHTML += '<option value="412">中端级</option>';
+                    motherboardModel.innerHTML += '<option value="413">高端定制</option>';
+                } else if (version === '42') {
+                    motherboardModel.innerHTML += '<option value="421">入门级</option>';
+                    motherboardModel.innerHTML += '<option value="422">中端级</option>';
+                    motherboardModel.innerHTML += '<option value="423">高端定制</option>';
+                }
+            });
+        }
+
+    }
+
+    // 更新内存类型和大小
+    function updateMemoryOptions() {
+        const motherboardVersion = document.getElementById('motherboardVersion').value;
+        const memoryType = document.getElementById('memoryType');
+        const memorySize = document.getElementById('memorySize');
+
+        memoryType.innerHTML = '<option value="">请选择内存类型</option>';
+        memorySize.innerHTML = '<option value="">请选择内存大小</option>';
+
+        if (motherboardVersion === '41') {  // D4
+            memoryType.innerHTML += '<option value="61">D4</option>';
+            memorySize.innerHTML += '<option value="8">8 GB</option><option value="16">16 GB</option><option value="32">32 GB</option>';
+        } else if (motherboardVersion === '42') {  // D5
+            memoryType.innerHTML += '<option value="62">D5</option>';
+            memorySize.innerHTML += '<option value="16">16 GB</option><option value="24">24 GB</option><option value="32">32 GB</option><option value="64">64 GB</option>';
+        }
+    }
+    //更新内存颗粒
+    function updateMemoryModel() {
+        const memoryType = document.getElementById('memoryType').value;
+        const memoryModel = document.getElementById('memoryModel');
+
+        memoryModel.innerHTML = '<option value="">请选择内存颗粒</option>';
+
+        if (memoryType === '61') { // DDR4
+            memoryModel.innerHTML += '<option value="611">特调颗粒</option>';
+            memoryModel.innerHTML += '<option value="612">非特调颗粒</option>';
+        } else if (memoryType === '62') { // DDR5
+            memoryModel.innerHTML += '<option value="621">特调颗粒</option>';
+            memoryModel.innerHTML += '<option value="622">非特调颗粒</option>';
+        }
+    }
+    // 绑定事件
+    document.getElementById('memoryType').addEventListener('change', updateMemoryModel);
+
+
+
+    // 更新显卡型号和显存大小
+    function updateGpuModel() {
+        const gpuType = document.getElementById('gpuType').value;
+        const gpuModel = document.getElementById('gpuModel');
+        const gpuSize = document.getElementById('gpuSize');
+
+        gpuModel.innerHTML = '<option value="">请选择显卡型号</option>';
+        gpuSize.innerHTML = '<option value="">请选择显存大小</option>';
+
+        if (gpuType === '21') {  // N卡
+            gpuModel.innerHTML += '<option value="211">10系</option><option value="212">20系</option><option value="213">30系</option><option value="214">40系</option>';
+        } else if (gpuType === '22') {  // A卡
+            gpuModel.innerHTML += '<option value="221">5000系</option><option value="222">6000系</option><option value="223">7000系</option>';
+        }
+    }
+    function updateGpuSize() {
+        const gpuModel = document.getElementById('gpuModel').value;
+        const gpuSize = document.getElementById('gpuSize');
+
+        gpuSize.innerHTML = '<option value="">请选择显存大小</option>';
+
+        if (gpuModel === '211' || gpuModel === '221') {
+            gpuSize.innerHTML += '<option value="4">4GB及以下</option><option value="8">8GB及以下</option>';
+        } else if (gpuModel === '212' || gpuModel === '222') {
+            gpuSize.innerHTML += '<option value="8">8GB及以下</option><option value="12">12GB及以下</option>';
+        } else if (gpuModel === '213' || gpuModel === '223' || gpuModel === '214') {
+            gpuSize.innerHTML += '<option value="8">8GB及以下</option><option value="12">12GB及以下</option><option value="16">16GB及以上</option>';
+        }
+    }
+
+    // 更新电源型号选项
+    function updateSupplyModelOptions() {
+        const supplyType = document.getElementById('supplyType').value;
+        const supplyModel = document.getElementById('supplyModel');
+
+        // 清空电源型号的选项
+        supplyModel.innerHTML = '<option value="">请选择电源型号</option>';
+
+        if (supplyType === '51') { // 全模组
+            supplyModel.innerHTML += '<option value="511">金牌</option>';
+            supplyModel.innerHTML += '<option value="512">铜牌</option>';
+        } else if (supplyType === '52') { // 非全模组
+            supplyModel.innerHTML += '<option value="521">金牌</option>';
+            supplyModel.innerHTML += '<option value="522">铜牌</option>';
+        }
+    }
+    // 绑定事件
+    document.getElementById('supplyType').addEventListener('change', updateSupplyModelOptions);
+
+
+    // 更新散热型号
+    function updateCoolingSize() {
+        const coolingType = document.getElementById('coolingType').value;
+        const coolingSize = document.getElementById('coolingSize');
+
+        coolingSize.innerHTML = '<option value="">请选择散热规格</option>';
+
+        if (coolingType === '31') {  // 风冷
+            coolingSize.innerHTML += '<option value="311">单塔</option><option value="312">双塔</option>';
+        } else if (coolingType === '32') {  // 水冷
+            coolingSize.innerHTML += '<option value="321">120水冷</option><option value="322">240水冷</option><option value="323">360水冷</option>';
+        }
+    }
+    document.getElementById('coolingType').addEventListener('change', updateCoolingSize);
+    // 更新机箱型号
+    function updateCaseModel() {
+        const caseType = document.getElementById('caseType').value;
+        const caseModel = document.getElementById('caseModel');
+
+        // 清空机箱型号的选项
+        caseModel.innerHTML = '<option value="">请选择机箱型号</option>';
+
+        // 根据机箱类型更新型号
+        if (caseType === '81') {  // 普通机箱
+            caseModel.innerHTML += '<option value="811">普通海景房</option>';
+            caseModel.innerHTML += '<option value="812">普通非海景房</option>';
+        } else if (caseType === '82') {  // 高端定制
+            caseModel.innerHTML += '<option value="821">高端定制海景房</option>';
+            caseModel.innerHTML += '<option value="822">高端定制非海景房</option>';
+        }
+    }
+    // 绑定机箱类型选择事件
+    document.getElementById('caseType').addEventListener('change', updateCaseModel);
+
+
+    // 表单提交时向后端发送请求，获取具体的配置
+    document.getElementById('configForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        // 获取表单数据
+        const formData = new FormData(event.target);
+
+        // 构建数据对象
+        const data = {
+            cpuType: formData.get('cpuType'),
+            gpuType: parseInt(formData.get('gpuType')),
+            gpuModel: parseInt(formData.get('gpuModel')),
+            gpuSize: parseInt(formData.get('gpuSize')),
+            motherboardType: parseInt(formData.get('motherboardType')),
+            motherboardVersion: parseInt(formData.get('motherboardVersion')),
+            motherboardModel: parseInt(formData.get('motherboardModel')),
+            memoryType: parseInt(formData.get('memoryType')),
+            memorySize: parseInt(formData.get('memorySize')),
+            memoryModel: parseInt(formData.get('memoryModel')),
+            ssdType: parseInt(formData.get('ssdType')),
+            ssdSize: formData.get('ssdSize'),
+            coolingType: parseInt(formData.get('coolingType')),
+            coolingSize: parseInt(formData.get('coolingSize')),
+            supplyType: parseInt(formData.get('supplyType')),
+            supplyModel: parseInt(formData.get('supplyModel')),
+            supplySize: parseInt(formData.get('supplySize')),
+            caseType: parseInt(formData.get('caseType')),
+            caseModel: parseInt(formData.get('caseModel')),
+            totalBudget: parseInt(formData.get('totalBudget'))
+        };
+
+        // 显示加载动画
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('result').innerHTML = '';
+
+        // 使用 Fetch API 发送请求到后端
+        fetch('/products/auto_createProfileBySelect/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(responseData => {
+                // 隐藏加载动画
+                document.getElementById('loading').style.display = 'none';
+
+                // 显示结果
+                displayConfig(responseData.data);
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                console.error('请求失败:', error);
+                alert('生成配置失败，请稍后再试');
+            });
+    });
+
+    // 显示生成的配置
+    function displayConfig(config) {
+        // 初始化总价为0
+        let totalPrice = 0;
+
+        // 定义一个辅助函数，用于将组件价格添加到总价中
+        function addPrice(component) {
+            if (component && component.price) {
+                totalPrice += component.price;
+            }
+        }
+
+        // 依次累加每个组件的价格
+        addPrice(config.CPU);
+        addPrice(config.Motherboard);
+        addPrice(config.Memory);
+        addPrice(config.GPU);
+        addPrice(config.PowerSupply);
+        addPrice(config.SSD);
+        addPrice(config.Cooling);
+        addPrice(config.Case);
+
+        // 更新总价
+        config.totalPrice = totalPrice;
+
+        // 显示配置及总价
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `
+        <h3>生成的配置</h3>
+        <ul>
+            <li>CPU: ${config.CPU ? `${config.CPU.itemType} - ￥${config.CPU.price}` : '未选择'}</li>
+            <li>主板: ${config.Motherboard ? `${config.Motherboard.itemType} - ￥${config.Motherboard.price}` : '未选择'}</li>
+            <li>内存: ${config.Memory ? `${config.Memory.itemType} - ￥${config.Memory.price}` : '未选择'}</li>
+            <li>显卡: ${config.GPU ? `${config.GPU.itemType} - ￥${config.GPU.price}` : '未选择'}</li>
+            <li>电源: ${config.PowerSupply ? `${config.PowerSupply.itemType} - ￥${config.PowerSupply.price}` : '未选择'}</li>
+            <li>SSD: ${config.SSD ? `${config.SSD.itemType} - ￥${config.SSD.price}` : '未选择'}</li>
+            <li>散热器: ${config.Cooling ? `${config.Cooling.itemType} - ￥${config.Cooling.price}` : '未选择'}</li>
+            <li>机箱: ${config.Case ? `${config.Case.itemType} - ￥${config.Case.price}` : '未选择'}</li>
+        </ul>
+        <p><strong>总价: ￥${config.totalPrice}</strong></p>
+    `;
+    }
+
+</script>
+<footer class="footer">
+    <div class="text-center rights container">
+        <p>作者声明数据只供娱乐</p>
+    </div>
+</footer>
+</body>
+</html>
